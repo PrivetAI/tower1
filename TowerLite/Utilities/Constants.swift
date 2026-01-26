@@ -28,8 +28,8 @@ enum GameSettings {
     static let targetZonePosition: CGFloat = 0.5 // center
     
     // Difficulty scaling
-    static let minCycleDuration: Double = 1.0 // Minimum speed cap (was 0.6)
-    static let difficultyIncreasePerFloor: Double = 0.008 // Slower ramp up (was 0.01)
+    static let minCycleDuration: Double = 0.6 // Faster max speed (was 1.0)
+    static let difficultyIncreasePerFloor: Double = 0.025 // Noticeable speed increase every floor (was 0.008)
 }
 
 enum AppFonts {
