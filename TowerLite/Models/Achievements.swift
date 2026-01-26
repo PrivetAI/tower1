@@ -2,13 +2,17 @@ import SwiftUI
 
 // MARK: - Achievement System
 
-struct Achievement: Identifiable, Codable {
+struct Achievement: Identifiable, Codable, Equatable {
     let id: String
     let title: String
     let description: String
     let icon: String
     var isUnlocked: Bool
     var unlockedDate: Date?
+    
+    static func == (lhs: Achievement, rhs: Achievement) -> Bool {
+        lhs.id == rhs.id && lhs.isUnlocked == rhs.isUnlocked
+    }
     
     static let allAchievements: [Achievement] = [
         Achievement(id: "first_climb", title: "First Steps", description: "Complete your first climb", icon: "figure.stairs", isUnlocked: false),

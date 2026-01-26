@@ -192,8 +192,8 @@ struct HomeView: View {
         } message: {
             Text("Your score of \(gameState.currentScore) will be saved to history. You'll start a new climb from floor 1.")
         }
-        .onChange(of: achievementManager.newlyUnlocked) { newValue in
-            if newValue != nil {
+        .onChange(of: achievementManager.newlyUnlocked) { _ in
+            if achievementManager.newlyUnlocked != nil {
                 SoundManager.shared.playAchievement()
                 showAchievementPopup = true
             }

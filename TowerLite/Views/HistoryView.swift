@@ -47,8 +47,6 @@ struct HistoryView: View {
                     .foregroundColor(AppColors.gold)
                 }
             }
-            .toolbarBackground(Color.clear, for: .navigationBar)
-            .toolbarColorScheme(.dark, for: .navigationBar)
         }
     }
 }
