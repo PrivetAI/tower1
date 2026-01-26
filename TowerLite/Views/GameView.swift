@@ -166,7 +166,7 @@ struct GameView: View {
         showCountdown = true
         // Reset state
         currentPosition = 0.5
-        targetPosition = 0.0
+        targetPosition = 0.2 // Start closer to center so early taps don't immediately fail
         isMovingRight = true
         scrollOffset = 0
         playerYOffset = 0
@@ -339,6 +339,8 @@ struct GameView: View {
         gameResult = nil
         showResult = false
         isJumping = false
+        targetPosition = 0.2 // Reset to starting position
+        isMovingRight = true
         startCountdown()
     }
     
