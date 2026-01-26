@@ -12,8 +12,10 @@ struct GameView: View {
     @State private var scrollOffset: CGFloat = 0
     @State private var playerYOffset: CGFloat = 0
     @State private var isJumping = false
-    @State private var currentPlatformType: PlatformType = .normal
+    @State private var currentPlatformType: PlatformType = .normal // The target platform (Top)
+    @State private var standingOnPlatformType: PlatformType = .normal // The platform under player (Bottom)
     @State private var gameTimer: Timer? // Manual timer for game loop
+    @State private var breakingTimer: Timer? // Timer for breaking platforms
     
     // Legacy State (Restored)
     @State private var gameResult: GameResult?
@@ -117,7 +119,9 @@ struct GameView: View {
                         scrollOffset: scrollOffset,
                         isJumping: isJumping,
                         playerYOffset: playerYOffset,
-                        targetPlatformType: currentPlatformType
+                        targetPlatformType: currentPlatformType,
+                        currentPlatformType: standingOnPlatformType,
+                        isBreaking: breakingTimer != nil
                     )
                     .frame(height: 420)
                     .padding(.horizontal, 16)
@@ -157,6 +161,8 @@ struct GameView: View {
         .onDisappear {
             gameTimer?.invalidate()
             gameTimer = nil
+            breakingTimer?.invalidate()
+            breakingTimer = nil
         }
     }
     
@@ -217,6 +223,10 @@ struct GameView: View {
     
     private func handleTap() {
         guard !isJumping && !hasPressed else { return }
+        
+        // Cancel breaking timer immediately
+        breakingTimer?.invalidate()
+        breakingTimer = nil
         
         // Calculate collision
         // Player effectively at 0.5 (Center) of the screen WIDTH-wise?
@@ -295,14 +305,19 @@ struct GameView: View {
                 // 4. Reset for next floor
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                     self.scrollOffset = 0
-                    self.currentPosition = 0.5
+                    
+                    // Seamless transition: Current position becomes where we landed
+                    self.currentPosition = self.targetPosition
+                    self.standingOnPlatformType = self.currentPlatformType
                     
                     // Randomize next platform type based on floor
                     self.currentPlatformType = PlatformType.random(for: self.gameState.currentFloor)
                     
                     self.targetPosition = self.isMovingRight ? 0.0 : 1.0
                     self.hasPressed = false
+                    
                     self.startLoop()
+                    self.startBreakingTimer()
                 }
             }
             
@@ -337,7 +352,29 @@ struct GameView: View {
         isJumping = false
         targetPosition = 0.2 // Reset to starting position
         isMovingRight = true
+        currentPlatformType = .normal
+        standingOnPlatformType = .normal
         startCountdown()
+    }
+    
+    private func startBreakingTimer() {
+        guard standingOnPlatformType == .breaking else { return }
+        
+        breakingTimer?.invalidate()
+        breakingTimer = Timer.scheduledTimer(withTimeInterval: 3.0, repeats: false) { _ in
+            // Game Over
+            self.gameResult = .tryAgain
+            self.showResult = true
+            self.stopGameLoop()
+            SoundManager.shared.playTap() // Fail sound
+        }
+    }
+    
+    private func stopGameLoop() {
+        gameTimer?.invalidate()
+        gameTimer = nil
+        breakingTimer?.invalidate()
+        breakingTimer = nil
     }
     
     private func saveAndExit() {

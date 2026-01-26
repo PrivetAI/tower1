@@ -24,7 +24,7 @@ enum PlatformType: CaseIterable {
     var icon: String? {
         switch self {
         case .normal: return nil
-        case .breaking: return "⚠️"
+        case .breaking: return nil // No icon as requested
         case .moving: return "↔️"
         case .slippery: return "💨"
         }
@@ -58,6 +58,8 @@ struct TowerClimbView: View {
     let isJumping: Bool // Is the player currently mid-air?
     let playerYOffset: CGFloat // Vertical animation offset for the player jump
     var targetPlatformType: PlatformType = .normal
+    var currentPlatformType: PlatformType = .normal
+    var isBreaking: Bool = false // Should the current platform shake?
     
     var body: some View {
         GeometryReader { geometry in
@@ -86,7 +88,7 @@ struct TowerClimbView: View {
                 // --- MOVING ELEMENTS ---
                 
                 // 1. Current Platform (Bottom)
-                PlatformView(width: platformWidth, type: .normal)
+                PlatformView(width: platformWidth, type: currentPlatformType, isShaking: isBreaking)
                     .position(
                         x: calculateX(for: currentPosition, width: width, platformWidth: platformWidth),
                         y: height * 0.75 + scrollOffset
@@ -126,6 +128,7 @@ struct TowerClimbView: View {
 struct PlatformView: View {
     let width: CGFloat
     var type: PlatformType = .normal
+    var isShaking: Bool = false
     
     var body: some View {
         ZStack {
@@ -137,6 +140,8 @@ struct PlatformView: View {
                     RoundedRectangle(cornerRadius: 8)
                         .stroke(Color.black.opacity(0.4), lineWidth: 2)
                 )
+                .offset(x: isShaking ? CGFloat.random(in: -2...2) : 0, y: isShaking ? CGFloat.random(in: -1...1) : 0)
+                .animation(isShaking ? .default.repeatForever(autoreverses: true).speed(4) : .default, value: isShaking)
             
             // Type indicator
             if let icon = type.icon {
