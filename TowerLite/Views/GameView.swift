@@ -14,11 +14,25 @@ struct GameView: View {
     @State private var playerYOffset: CGFloat = 0
     @State private var isJumping = false
     
+    // Legacy State (Restored)
+    @State private var gameResult: GameResult?
+    @State private var hasPressed = false
+    @State private var showResult = false
+    @State private var countdown = 3
+    @State private var showCountdown = true
+    @State private var currentCombo = 0
+    
     // Animation constants
     private let floorHeight: CGFloat = 300 * 0.4
     
     // Movement Logic
     @State private var isMovingRight = true
+    
+    var cycleDuration: Double {
+        // Speed increases with floor level (skill-based difficulty)
+        max(GameSettings.minCycleDuration,
+            GameSettings.indicatorCycleDuration - Double(gameState.currentFloor - 1) * GameSettings.difficultyIncreasePerFloor)
+    }
     
     var body: some View {
         ZStack {
