@@ -13,6 +13,7 @@ struct GameView: View {
     @State private var scrollOffset: CGFloat = 0
     @State private var playerYOffset: CGFloat = 0
     @State private var isJumping = false
+    @State private var currentPlatformType: PlatformType = .normal
     
     // Legacy State (Restored)
     @State private var gameResult: GameResult?
@@ -24,10 +25,10 @@ struct GameView: View {
     
     // Animation constants
     // Animation constants
-    // Matches visual logic: TowerClimbView height is 300.
-    // Platforms at 0.8 (bottom) and 0.4 (top). Diff = 0.4.
-    // 300 * 0.4 = 120, but player sits ON platform so needs extra height
-    private let floorHeight: CGFloat = 300 * 0.5 // 150 - jumps higher to reach target
+    // Matches visual logic: TowerClimbView height is 420.
+    // Platforms at 0.75 (bottom) and 0.35 (top). Diff = 0.4.
+    // 420 * 0.4 = 168, using 180 for safety margin
+    private let floorHeight: CGFloat = 180
     
     // Movement Logic
     @State private var isMovingRight = true
@@ -117,25 +118,21 @@ struct GameView: View {
                         currentPosition: currentPosition,
                         scrollOffset: scrollOffset,
                         isJumping: isJumping,
-                        playerYOffset: playerYOffset
+                        playerYOffset: playerYOffset,
+                        targetPlatformType: currentPlatformType
                     )
-                    .frame(height: 300)
-                    .padding(.horizontal, 20)
+                    .frame(height: 420)
+                    .padding(.horizontal, 16)
                     .clipped()
-                    
-                    Text("Jump precisely when the top platform aligns!")
-                        .font(AppFonts.body(14))
-                        .foregroundColor(.white.opacity(0.6))
-                        .padding(.top, 20)
                     
                     Spacer()
                     
                     // Jump Button
                     Button(action: handleTap) {
                         Text("JUMP!")
-                            .font(AppFonts.title(32))
+                            .font(AppFonts.title(24))
                             .foregroundColor(.white)
-                            .frame(width: 160, height: 160)
+                            .frame(width: 110, height: 110)
                             .background(
                                 Circle()
                                     .fill(
@@ -143,10 +140,10 @@ struct GameView: View {
                                             colors: [AppColors.accent, AppColors.accent.opacity(0.6)],
                                             center: .center,
                                             startRadius: 0,
-                                            endRadius: 80
+                                            endRadius: 55
                                         )
                                     )
-                                    .shadow(color: AppColors.accent.opacity(0.5), radius: 20, y: 10)
+                                    .shadow(color: AppColors.accent.opacity(0.5), radius: 15, y: 8)
                             )
                     }
                     .disabled(isJumping || hasPressed) // Lock input during jump
@@ -293,18 +290,13 @@ struct GameView: View {
                 
                 // 4. Reset for next floor
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                    // Instant reset logic to loop
-                    self.scrollOffset = 0 // Reset container
-                    self.currentPosition = 0.5 // Previous target is now current (Center, because we hit it!)
-                    // Wait, if we hit it at offset, should we stay offset?
-                    // For simplicity, let's "Snap" to center as if player corrected balance?
-                    // Or keep 'currentPosition' = 'targetPosition' (the actual hit spot).
-                    // Infinite climber usually you stay where you landed.
-                    // But our Player is FIXED X=Center. So we must treat "Success" as "Platform aligned with Center".
-                    // So effectively, we are now on a platform at Center.
-                    self.currentPosition = 0.5 
+                    self.scrollOffset = 0
+                    self.currentPosition = 0.5
                     
-                    self.targetPosition = self.isMovingRight ? 0.0 : 1.0 // Start from side
+                    // Randomize next platform type based on floor
+                    self.currentPlatformType = PlatformType.random(for: self.gameState.currentFloor)
+                    
+                    self.targetPosition = self.isMovingRight ? 0.0 : 1.0
                     self.hasPressed = false
                     self.startLoop()
                 }
