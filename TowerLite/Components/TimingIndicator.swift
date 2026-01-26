@@ -103,9 +103,9 @@ struct TowerClimbView: View {
                 Image("climber")
                     .resizable()
                     .scaledToFit()
-                    .frame(width: playerSize * 1.6, height: playerSize * 1.6)
                     .shadow(color: Color.black.opacity(0.4), radius: 8, y: 6)
-                    .position(x: width / 2, y: height * 0.75 - playerSize * 0.8 + playerYOffset + scrollOffset)
+                    // Position ON the platform (offset up by 1.1 * playerSize to stand ON top)
+                    .position(x: width / 2, y: height * 0.75 - playerSize * 1.1 + playerYOffset + scrollOffset)
                     
             }
             .clipped()
