@@ -16,17 +16,25 @@ struct TowerClimbView: View {
             // Dimensions
             let platformWidth = width * GameSettings.targetZoneWidth
             let playerSize: CGFloat = 40
-            let floorHeight = height * 0.4
-            
-            // The "World" container that scrolls
             ZStack {
                 // Background Tower Wall (Infinite scrolling brick pattern)
                 TowerBackground(width: width, height: height, scrollOffset: scrollOffset)
                 
+                // Pillars (Rails)
+                HStack {
+                    Rectangle()
+                        .fill(LinearGradient(colors: [Color(hex: "2d3436"), Color(hex: "636e72")], startPoint: .leading, endPoint: .trailing))
+                        .frame(width: 20)
+                    Spacer()
+                    Rectangle()
+                        .fill(LinearGradient(colors: [Color(hex: "636e72"), Color(hex: "2d3436")], startPoint: .leading, endPoint: .trailing))
+                        .frame(width: 20)
+                }
+                .frame(width: width * 0.9) // Pillars slightly outside the track width
+                
                 // --- MOVING ELEMENTS ---
                 
                 // 1. Current Platform (Bottom)
-                // Moves DOWN as we scroll
                 PlatformView(width: platformWidth)
                     .position(
                         x: calculateX(for: currentPosition, width: width, platformWidth: platformWidth),
@@ -34,7 +42,6 @@ struct TowerClimbView: View {
                     )
                 
                 // 2. Target Platform (Top)
-                // Moves LEFT/RIGHT (gameplay) and DOWN (scroll)
                 PlatformView(width: platformWidth)
                     .position(
                         x: calculateX(for: targetPosition, width: width, platformWidth: platformWidth),
@@ -42,38 +49,13 @@ struct TowerClimbView: View {
                     )
                 
                 // 3. Player
-                // If IDLE: Sits on Current Platform (Bottom)
-                // If JUMPING: Interpolates to Target Platform (Top)
-                // Visually: We keep the player roughly centered in the view, but they animate UP relative to the world
-                // Actually: In this "camera fixed on player" vs "world scrolls" logic:
-                // We keep player fixed Y, and world moves? Or player jumps Y and then lands?
-                // Let's do: Player moves Y (jump), and when 'Landed', we reset players Y and shift World Y instantly to loop.
-                // Or better for SwiftUI: 
-                // Player sits at `height * 0.8`.
-                // When Jump: Player animates to `height * 0.4`.
-                // When Land: Whole world shifts `+floorHeight`, and Player instantly resets to `height * 0.8` (relative to new floor).
-                
-                // Simplified for this component:
-                // Player is drawn at a fixed Y + playerYOffset
-                // The logical "Bottom" is Y=0.8. The logical "Top" is Y=0.4.
-                // Jump animation will tweak playerYOffset from 0 to -floorHeight.
-                
-                Image(systemName: "figure.climbing")
+                // Using custom asset "climber"
+                Image("climber")
                     .resizable()
                     .scaledToFit()
-                    .frame(width: playerSize, height: playerSize)
-                    .foregroundColor(AppColors.gold)
-                    .shadow(color: AppColors.gold.opacity(0.6), radius: 8)
-                    .rotationEffect(.degrees(-10))
-                    // Player X follows the platform they are currently ON. 
-                    // While jumping, they should lerp to the target X? Or jump straight up?
-                    // "Tower" logic usually implies jumping straight up or slightly towards center. 
-                    // For simplicity: Player stays physically X-aligned with the platform they launched from until mid-air?
-                    // No, let's keep Player X Center for now as per previous logic, OR make player X dynamic.
-                    // Let's stick to: Player is CENTERED. Platforms move under him.
-                    // This implies the Current Platform must be ALIGNED with Center for the player to be there?
-                    // Wait, previous logic was: Player Center. Platform Moves. You jump when aligned.
-                    // So Player X = Center.
+                    .frame(width: playerSize * 1.5, height: playerSize * 1.5) // Slightly larger for detail
+                    .shadow(color: Color.black.opacity(0.3), radius: 5, y: 5)
+                    // No rotation needed for this pixel art style usually, but let's keep it straight
                     .position(x: width / 2, y: height * 0.8 + playerYOffset + scrollOffset)
                     
             }

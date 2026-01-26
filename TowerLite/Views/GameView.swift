@@ -23,6 +23,10 @@ struct GameView: View {
     @State private var currentCombo = 0
     
     // Animation constants
+    // Animation constants
+    // Matches visual logic: TowerClimbView height is 300.
+    // Platforms at 0.8 (bottom) and 0.4 (top). Diff = 0.4.
+    // 300 * 0.4 = 120.
     private let floorHeight: CGFloat = 300 * 0.4
     
     // Movement Logic
