@@ -7,13 +7,13 @@ struct GameView: View {
     @EnvironmentObject var achievementManager: AchievementManager
     @Binding var isPresented: Bool
     
-    // State for Infinite Climber
     @State private var targetPosition: CGFloat = 0.5 // The moving platform (Top)
     @State private var currentPosition: CGFloat = 0.5 // The static platform (Bottom)
     @State private var scrollOffset: CGFloat = 0
     @State private var playerYOffset: CGFloat = 0
     @State private var isJumping = false
     @State private var currentPlatformType: PlatformType = .normal
+    @State private var gameTimer: Timer? // Manual timer for game loop
     
     // Legacy State (Restored)
     @State private var gameResult: GameResult?
@@ -154,6 +154,10 @@ struct GameView: View {
         .onAppear {
             startCountdown()
         }
+        .onDisappear {
+            gameTimer?.invalidate()
+            gameTimer = nil
+        }
     }
     
     private func startCountdown() {
@@ -180,34 +184,36 @@ struct GameView: View {
     
     private func startLoop() {
         guard !hasPressed else { return }
-        
-        // Ensure inputs are unlocked
         isJumping = false
+        gameTimer?.invalidate()
         
-        // Loop Animation for the Target Platform using updated duration
-        animateTarget()
-    }
-    
-    private func animateTarget() {
-        guard !hasPressed && !showResult else { return }
-        
-        let destination: CGFloat = isMovingRight ? 1.0 : 0.0
-        
-        // Calculate duration based on distance to ensure constant speed?
-        // Or simple cycle based on floor?
-        // Let's stick to simple ping-pong with duration from settings
-        
-        withAnimation(.linear(duration: cycleDuration / 2)) {
-            targetPosition = destination
-        }
-        
-        DispatchQueue.main.asyncAfter(deadline: .now() + cycleDuration / 2) {
-            if !self.hasPressed && !self.showResult {
-                self.isMovingRight.toggle()
-                self.animateTarget()
+        // Manual game loop for accurate collision detection
+        gameTimer = Timer.scheduledTimer(withTimeInterval: 0.016, repeats: true) { _ in
+            guard !self.hasPressed && !self.showResult else {
+                self.gameTimer?.invalidate()
+                return
+            }
+            
+            // Move target
+            let speed = 0.016 / (self.cycleDuration / 2)
+            if self.isMovingRight {
+                self.targetPosition += speed
+                if self.targetPosition >= 1.0 {
+                    self.targetPosition = 1.0
+                    self.isMovingRight = false
+                }
+            } else {
+                self.targetPosition -= speed
+                if self.targetPosition <= 0.0 {
+                    self.targetPosition = 0.0
+                    self.isMovingRight = true
+                }
             }
         }
     }
+    
+    // Legacy function removed
+    private func animateTarget() {}
     
     private func handleTap() {
         guard !isJumping && !hasPressed else { return }
