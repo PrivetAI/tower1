@@ -99,11 +99,13 @@ struct TowerClimbView: View {
                         y: height * 0.35 + scrollOffset
                     )
                 
-                // 3. Player - Squirrel drawn with SwiftUI
-                SquirrelView()
-                    .frame(width: playerSize * 1.4, height: playerSize * 1.4)
-                    .shadow(color: Color.black.opacity(0.4), radius: 6, y: 4)
-                    .position(x: width / 2, y: height * 0.75 - playerSize * 0.7 + playerYOffset + scrollOffset)
+                // 3. Player
+                Image("climber")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: playerSize * 1.6, height: playerSize * 1.6)
+                    .shadow(color: Color.black.opacity(0.4), radius: 8, y: 6)
+                    .position(x: width / 2, y: height * 0.75 - playerSize * 0.8 + playerYOffset + scrollOffset)
                     
             }
             .clipped()
@@ -154,78 +156,7 @@ struct PlatformView: View {
     }
 }
 
-// MARK: - Squirrel Character
-
-struct SquirrelView: View {
-    var body: some View {
-        GeometryReader { geometry in
-            let size = min(geometry.size.width, geometry.size.height)
-            
-            ZStack {
-                // Tail
-                Ellipse()
-                    .fill(LinearGradient(colors: [Color(hex: "d35400"), Color(hex: "e67e22")], startPoint: .bottom, endPoint: .top))
-                    .frame(width: size * 0.5, height: size * 0.7)
-                    .rotationEffect(.degrees(-30))
-                    .offset(x: size * 0.25, y: -size * 0.1)
-                
-                // Body
-                Ellipse()
-                    .fill(LinearGradient(colors: [Color(hex: "e67e22"), Color(hex: "f39c12")], startPoint: .bottom, endPoint: .top))
-                    .frame(width: size * 0.55, height: size * 0.6)
-                    .offset(y: size * 0.1)
-                
-                // Belly
-                Ellipse()
-                    .fill(Color(hex: "fdebd0"))
-                    .frame(width: size * 0.35, height: size * 0.4)
-                    .offset(y: size * 0.15)
-                
-                // Head
-                Circle()
-                    .fill(LinearGradient(colors: [Color(hex: "e67e22"), Color(hex: "f39c12")], startPoint: .bottom, endPoint: .top))
-                    .frame(width: size * 0.5, height: size * 0.5)
-                    .offset(y: -size * 0.2)
-                
-                // Face
-                Circle()
-                    .fill(Color(hex: "fdebd0"))
-                    .frame(width: size * 0.3, height: size * 0.25)
-                    .offset(y: -size * 0.15)
-                
-                // Eyes
-                HStack(spacing: size * 0.08) {
-                    Circle().fill(Color.black).frame(width: size * 0.08)
-                    Circle().fill(Color.black).frame(width: size * 0.08)
-                }
-                .offset(y: -size * 0.22)
-                
-                // Nose
-                Circle()
-                    .fill(Color(hex: "2d2d2d"))
-                    .frame(width: size * 0.06)
-                    .offset(y: -size * 0.12)
-                
-                // Ears
-                HStack(spacing: size * 0.25) {
-                    Circle()
-                        .fill(Color(hex: "d35400"))
-                        .frame(width: size * 0.15)
-                    Circle()
-                        .fill(Color(hex: "d35400"))
-                        .frame(width: size * 0.15)
-                }
-                .offset(y: -size * 0.4)
-                
-                // Helmet
-                Capsule()
-                    .fill(LinearGradient(colors: [Color(hex: "e74c3c"), Color(hex: "c0392b")], startPoint: .top, endPoint: .bottom))
-                    .frame(width: size * 0.45, height: size * 0.2)
-                    .offset(y: -size * 0.35)
-            }
-        }
-    }
-}
+// MARK: - Tower Background
 
 struct TowerBackground: View {
     let width: CGFloat
