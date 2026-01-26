@@ -26,8 +26,8 @@ struct GameView: View {
     // Animation constants
     // Matches visual logic: TowerClimbView height is 300.
     // Platforms at 0.8 (bottom) and 0.4 (top). Diff = 0.4.
-    // 300 * 0.4 = 120.
-    private let floorHeight: CGFloat = 300 * 0.4
+    // 300 * 0.4 = 120, but player sits ON platform so needs extra height
+    private let floorHeight: CGFloat = 300 * 0.5 // 150 - jumps higher to reach target
     
     // Movement Logic
     @State private var isMovingRight = true

@@ -24,7 +24,7 @@ enum AppColors {
 enum GameSettings {
     // Timing game settings
     static let indicatorCycleDuration: Double = 2.5 // Slower start (was 1.0)
-    static let targetZoneWidth: CGFloat = 0.35 // Wider target for forgiving gameplay
+    static let targetZoneWidth: CGFloat = 0.3 // Platform and hit zone width
     static let targetZonePosition: CGFloat = 0.5 // center
     
     // Difficulty scaling

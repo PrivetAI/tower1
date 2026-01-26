@@ -53,10 +53,10 @@ struct TowerClimbView: View {
                 Image("climber")
                     .resizable()
                     .scaledToFit()
-                    .frame(width: playerSize * 1.5, height: playerSize * 1.5) // Slightly larger for detail
-                    .shadow(color: Color.black.opacity(0.3), radius: 5, y: 5)
-                    // No rotation needed for this pixel art style usually, but let's keep it straight
-                    .position(x: width / 2, y: height * 0.8 + playerYOffset + scrollOffset)
+                    .frame(width: playerSize * 1.8, height: playerSize * 1.8) // Larger size
+                    .shadow(color: Color.black.opacity(0.4), radius: 8, y: 6)
+                    // Position ON the platform (offset up by playerSize to stand on it)
+                    .position(x: width / 2, y: height * 0.8 - playerSize * 0.9 + playerYOffset + scrollOffset)
                     
             }
             .clipped() // Clip anything outside the tower view
@@ -106,27 +106,54 @@ struct TowerBackground: View {
     
     var body: some View {
         GeometryReader { _ in
-            let brickHeight: CGFloat = 30
-            let brickWidth: CGFloat = 40
-            let rows = Int(height / brickHeight) + 4 // Extra rows for scrolling buffer
-            let cols = Int(width / brickWidth) + 1
+            let brickHeight: CGFloat = 25
+            let brickWidth: CGFloat = 50
+            let rows = Int(height / brickHeight) + 6 // Extra rows for scrolling buffer
+            let cols = Int(width / brickWidth) + 2
             
-            VStack(spacing: 0) {
-                ForEach(0..<rows, id: \.self) { row in
-                    HStack(spacing: 0) {
-                        ForEach(0..<cols, id: \.self) { _ in
-                            Rectangle()
-                                .fill(Color.white.opacity(0.05))
-                                .frame(width: brickWidth - 2, height: brickHeight - 2)
-                                .padding(1)
+            ZStack {
+                // Base gradient
+                LinearGradient(
+                    colors: [Color(hex: "4a3728"), Color(hex: "3d2d22"), Color(hex: "2d1f18")],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+                
+                // Brick pattern
+                VStack(spacing: 2) {
+                    ForEach(0..<rows, id: \.self) { row in
+                        HStack(spacing: 2) {
+                            ForEach(0..<cols, id: \.self) { col in
+                                ZStack {
+                                    // Brick base
+                                    RoundedRectangle(cornerRadius: 2)
+                                        .fill(
+                                            LinearGradient(
+                                                colors: [
+                                                    Color(hex: "8b7355").opacity(0.8),
+                                                    Color(hex: "6b5344").opacity(0.6)
+                                                ],
+                                                startPoint: .top,
+                                                endPoint: .bottom
+                                            )
+                                        )
+                                        .frame(width: brickWidth - 4, height: brickHeight - 4)
+                                    
+                                    // Random window on some bricks
+                                    if (row + col) % 7 == 0 {
+                                        RoundedRectangle(cornerRadius: 2)
+                                            .fill(Color(hex: "ffd700").opacity(0.3))
+                                            .frame(width: 8, height: 10)
+                                    }
+                                }
+                            }
                         }
+                        .offset(x: row % 2 == 0 ? 0 : brickWidth / 2)
                     }
-                    .offset(x: row % 2 == 0 ? 0 : brickWidth / 2)
                 }
+                .offset(y: (scrollOffset.truncatingRemainder(dividingBy: brickHeight + 2)) - brickHeight * 2)
             }
-            .offset(y: (scrollOffset.truncatingRemainder(dividingBy: brickHeight)) - brickHeight) // Infinite loop effect
         }
-        .background(AppColors.towerBase.opacity(0.3))
     }
 }
 
