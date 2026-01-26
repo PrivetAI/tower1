@@ -26,7 +26,7 @@ struct GameView: View {
     // Animation constants
     // TowerClimbView height = 420
     // Distance = 168 pixels, but adding boost to ensure it visually CLEARS the gap
-    private let floorHeight: CGFloat = 200 // Big jump
+    private let floorHeight: CGFloat = 230 // Huge jump to guarantee clearance
     
     // Movement Logic
     @State private var isMovingRight = true

@@ -23,13 +23,13 @@ enum AppColors {
 
 enum GameSettings {
     // Timing game settings
-    static let indicatorCycleDuration: Double = 2.5 // Slower start (was 1.0)
-    static let targetZoneWidth: CGFloat = 0.3 // Platform and hit zone width
+    static let indicatorCycleDuration: Double = 2.8 // Even slower start (was 2.5)
+    static let targetZoneWidth: CGFloat = 0.40 // Wider target zone (was 0.3) for easier hits
     static let targetZonePosition: CGFloat = 0.5 // center
     
     // Difficulty scaling
     static let minCycleDuration: Double = 1.0 // Minimum speed cap (was 0.6)
-    static let difficultyIncreasePerFloor: Double = 0.01 // Slower ramp up (was 0.02)
+    static let difficultyIncreasePerFloor: Double = 0.008 // Slower ramp up (was 0.01)
 }
 
 enum AppFonts {
