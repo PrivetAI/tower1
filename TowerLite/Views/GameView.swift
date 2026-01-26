@@ -15,7 +15,9 @@ struct GameView: View {
     @State private var currentPlatformType: PlatformType = .normal // The target platform (Top)
     @State private var standingOnPlatformType: PlatformType = .normal // The platform under player (Bottom)
     @State private var gameTimer: Timer? // Manual timer for game loop
-    @State private var breakingTimer: Timer? // Timer for breaking platforms
+    @State private var breakingProgress: CGFloat = 0.0 // 0.0 to 1.0 for cracking animation
+    @State private var movingPlatformOffset: CGFloat = 0.0 // Side-to-side movement
+    @State private var movingPlatformDirection: CGFloat = 1.0 // 1.0 or -1.0
     
     // Legacy State (Restored)
     @State private var gameResult: GameResult?
@@ -121,7 +123,8 @@ struct GameView: View {
                         playerYOffset: playerYOffset,
                         targetPlatformType: currentPlatformType,
                         currentPlatformType: standingOnPlatformType,
-                        isBreaking: breakingTimer != nil
+                        breakingProgress: breakingProgress,
+                        movingPlatformOffset: movingPlatformOffset
                     )
                     .frame(height: 420)
                     .padding(.horizontal, 16)
@@ -161,8 +164,6 @@ struct GameView: View {
         .onDisappear {
             gameTimer?.invalidate()
             gameTimer = nil
-            breakingTimer?.invalidate()
-            breakingTimer = nil
         }
     }
     
@@ -200,7 +201,7 @@ struct GameView: View {
                 return
             }
             
-            // Move target
+            // Move target indicator
             let speed = 0.016 / (self.cycleDuration / 2)
             if self.isMovingRight {
                 self.targetPosition += speed
@@ -215,6 +216,17 @@ struct GameView: View {
                     self.isMovingRight = true
                 }
             }
+            
+            // Animate moving platform side-to-side
+            if self.currentPlatformType == .moving {
+                let movingSpeed: CGFloat = 30.0 // pixels per second
+                let maxOffset: CGFloat = 40.0
+                self.movingPlatformOffset += self.movingPlatformDirection * movingSpeed * 0.016
+                if abs(self.movingPlatformOffset) >= maxOffset {
+                    self.movingPlatformDirection *= -1
+                    self.movingPlatformOffset = maxOffset * self.movingPlatformDirection
+                }
+            }
         }
     }
     
@@ -224,60 +236,20 @@ struct GameView: View {
     private func handleTap() {
         guard !isJumping && !hasPressed else { return }
         
-        // Cancel breaking timer immediately
-        breakingTimer?.invalidate()
-        breakingTimer = nil
+        // Calculate collision with platform-specific tolerance
+        // Normal tolerance
+        var tolerance = (GameSettings.targetZoneWidth / 0.8) / 2
         
-        // Calculate collision
-        // Player effectively at 0.5 (Center) of the screen WIDTH-wise?
-        // Wait, visually the player is at center (width/2).
-        // The Platform follows 'targetPosition' (0..1).
-        // To Land, the Platform must be roughly centered.
-        // Platform X = minX + (maxX-minX)*pos
-        // Player X = Center = width/2.
-        // So we need to check if Platform's frame overlaps Center.
+        // Slippery platform has narrower hit zone
+        if currentPlatformType == .slippery {
+            tolerance *= 0.6 // 40% harder to hit
+        }
         
-        // We know Platform Width is relative to screen width via settings.
-        // Logic: if targetPosition is roughly 0.5, it's a hit?
-        // Yes, because current implementation puts Player FIXED at Center.
-        // So the user must time it so the moving platform hits the center.
-        
-        // Hit Zone Logic:
-        // Platform is at `targetPosition` (0..1).
-        // Center is 0.5.
-        // Hit range is 0.5 +/- (platformWidthInPercent / 2 in terms of position space?)
-        // Wait, position 0 = Left Edge, 1 = Right Edge.
-        // Center is 0.5.
-        // So yes, simply checking if `targetPosition` is close to 0.5 is correct
-        // IF the platform travel covers the full width. 
-        // Our visualization does full width traversal.
-        
-        // Let's refactor `targetZoneWidth` to be "Tolerance" in 0..1 space.
-        // If platform is at 0.5, it is perfectly centered.
-        // If platform is at 0.5 +/- 0.15, it overlaps center enough?
-        
-        // Actual math:
-        // Hit if abs(targetPosition - 0.5) < (GameSettings.targetZoneWidth / 2)
-        // Wait, GameSettings.targetZoneWidth IS the platform width (0.3).
-        // IF platform width is 0.3 of screen...
-        // And travel distance is roughly 0.8 of screen...
-        // Then 1.0 unit of position = 0.8 screen width.
-        // Platform width = 0.3 screen width = (0.3/0.8) units of position ≈ 0.375 units.
-        // So if platform center is within 0.375/2 of player center (0.5), it's a hit?
-        // Yes.
-        
-        let tolerance = (GameSettings.targetZoneWidth / 0.8) / 2
         let distance = abs(targetPosition - 0.5)
         let isSuccess = distance < tolerance
         
         hasPressed = true // Lock logic loop
         isJumping = true  // Lock input
-        
-        // Stop the platform at current spot for visual clarity
-        // Using specific withAnimation block to freeze it? 
-        // The linear animation is ongoing... hard to kill midway without complex state.
-        // Easier: Just let it slide or (better) snap to the tapped value?
-        // SwiftUI animation cancel is tricky. We'll just define the outcome.
         
         if isSuccess {
             // SUCCESS SEQUENCE
@@ -294,6 +266,15 @@ struct GameView: View {
                 self.gameState.climbFloor()
                 self.currentCombo += 1
                 self.statisticsManager.recordSuccess(score: self.gameState.currentScore)
+                
+                // Check for achievements after each successful jump
+                self.achievementManager.checkAchievements(
+                    floor: self.gameState.currentFloor,
+                    score: self.gameState.currentScore,
+                    combo: self.currentCombo,
+                    totalGames: self.statisticsManager.stats.totalGames
+                )
+                
                 SoundManager.shared.playSuccess()
                 
                 // 3. Scroll World Down
@@ -316,8 +297,12 @@ struct GameView: View {
                     self.targetPosition = self.isMovingRight ? 0.0 : 1.0
                     self.hasPressed = false
                     
+                    // Reset moving platform offset for next platform
+                    self.movingPlatformOffset = 0.0
+                    self.movingPlatformDirection = 1.0
+                    
                     self.startLoop()
-                    self.startBreakingTimer()
+                    self.startBreakingAnimation()
                 }
             }
             
@@ -354,27 +339,44 @@ struct GameView: View {
         isMovingRight = true
         currentPlatformType = .normal
         standingOnPlatformType = .normal
+        breakingProgress = 0.0
+        movingPlatformOffset = 0.0
+        movingPlatformDirection = 1.0
         startCountdown()
     }
     
-    private func startBreakingTimer() {
-        guard standingOnPlatformType == .breaking else { return }
+    private func startBreakingAnimation() {
+        guard standingOnPlatformType == .breaking else {
+            breakingProgress = 0.0
+            return
+        }
         
-        breakingTimer?.invalidate()
-        breakingTimer = Timer.scheduledTimer(withTimeInterval: 3.0, repeats: false) { _ in
-            // Game Over
-            self.gameResult = .tryAgain
-            self.showResult = true
-            self.stopGameLoop()
-            SoundManager.shared.playTap() // Fail sound
+        // Gradually increase breaking progress over 3 seconds
+        let startTime = Date()
+        let duration: TimeInterval = 3.0
+        
+        Timer.scheduledTimer(withTimeInterval: 0.05, repeats: true) { timer in
+            let elapsed = Date().timeIntervalSince(startTime)
+            self.breakingProgress = min(CGFloat(elapsed / duration), 1.0)
+            
+            if elapsed >= duration {
+                timer.invalidate()
+                // Platform breaks - game over
+                self.gameResult = .tryAgain
+                self.showResult = true
+                self.stopGameLoop()
+                SoundManager.shared.playTap() // Fail sound
+            }
+            
+            if self.hasPressed {
+                timer.invalidate()
+            }
         }
     }
     
     private func stopGameLoop() {
         gameTimer?.invalidate()
         gameTimer = nil
-        breakingTimer?.invalidate()
-        breakingTimer = nil
     }
     
     private func saveAndExit() {

@@ -22,12 +22,8 @@ enum PlatformType: CaseIterable {
     }
     
     var icon: String? {
-        switch self {
-        case .normal: return nil
-        case .breaking: return nil // No icon as requested
-        case .moving: return "↔️"
-        case .slippery: return "💨"
-        }
+        // No icons on platforms
+        return nil
     }
     
     static func random(for floor: Int) -> PlatformType {
@@ -59,7 +55,8 @@ struct TowerClimbView: View {
     let playerYOffset: CGFloat // Vertical animation offset for the player jump
     var targetPlatformType: PlatformType = .normal
     var currentPlatformType: PlatformType = .normal
-    var isBreaking: Bool = false // Should the current platform shake?
+    var breakingProgress: CGFloat = 0.0 // 0.0 = no cracks, 1.0 = fully cracked
+    var movingPlatformOffset: CGFloat = 0.0 // Side-to-side movement for moving platform
     
     var body: some View {
         GeometryReader { geometry in
@@ -88,16 +85,16 @@ struct TowerClimbView: View {
                 // --- MOVING ELEMENTS ---
                 
                 // 1. Current Platform (Bottom)
-                PlatformView(width: platformWidth, type: currentPlatformType, isShaking: isBreaking)
+                PlatformView(width: platformWidth, type: currentPlatformType, breakingProgress: breakingProgress)
                     .position(
                         x: calculateX(for: currentPosition, width: width, platformWidth: platformWidth),
                         y: height * 0.75 + scrollOffset
                     )
                 
-                // 2. Target Platform (Top) - with type indicator
+                // 2. Target Platform (Top) - with moving offset
                 PlatformView(width: platformWidth, type: targetPlatformType)
                     .position(
-                        x: calculateX(for: targetPosition, width: width, platformWidth: platformWidth),
+                        x: calculateX(for: targetPosition, width: width, platformWidth: platformWidth) + (targetPlatformType == .moving ? movingPlatformOffset : 0),
                         y: height * 0.35 + scrollOffset
                     )
                 
@@ -128,7 +125,7 @@ struct TowerClimbView: View {
 struct PlatformView: View {
     let width: CGFloat
     var type: PlatformType = .normal
-    var isShaking: Bool = false
+    var breakingProgress: CGFloat = 0.0 // 0.0 = no cracks, 1.0 = fully cracked
     
     var body: some View {
         ZStack {
@@ -140,14 +137,11 @@ struct PlatformView: View {
                     RoundedRectangle(cornerRadius: 8)
                         .stroke(Color.black.opacity(0.4), lineWidth: 2)
                 )
-                .offset(x: isShaking ? CGFloat.random(in: -2...2) : 0, y: isShaking ? CGFloat.random(in: -1...1) : 0)
-                .animation(isShaking ? .default.repeatForever(autoreverses: true).speed(4) : .default, value: isShaking)
             
-            // Type indicator
-            if let icon = type.icon {
-                Text(icon)
-                    .font(.system(size: 14))
-                    .offset(y: -18)
+            // Cracking effect for breaking platforms
+            if type == .breaking && breakingProgress > 0 {
+                CrackOverlay(progress: breakingProgress)
+                    .frame(width: width, height: 28)
             }
             
             // Visual details
@@ -159,6 +153,51 @@ struct PlatformView: View {
             .padding(.horizontal, 10)
         }
         .shadow(color: Color.black.opacity(0.5), radius: 5, y: 5)
+    }
+}
+
+// Crack overlay for breaking platforms
+struct CrackOverlay: View {
+    let progress: CGFloat
+    
+    var body: some View {
+        Canvas { context, size in
+            let crackPath = Path { path in
+                // Crack pattern becomes more visible as progress increases
+                if progress > 0.2 {
+                    // First crack - diagonal from top-left
+                    path.move(to: CGPoint(x: size.width * 0.2, y: 0))
+                    path.addLine(to: CGPoint(x: size.width * 0.4, y: size.height))
+                }
+                
+                if progress > 0.4 {
+                    // Second crack - vertical in middle
+                    path.move(to: CGPoint(x: size.width * 0.5, y: 0))
+                    path.addLine(to: CGPoint(x: size.width * 0.45, y: size.height))
+                }
+                
+                if progress > 0.6 {
+                    // Third crack - diagonal from top-right
+                    path.move(to: CGPoint(x: size.width * 0.7, y: 0))
+                    path.addLine(to: CGPoint(x: size.width * 0.6, y: size.height))
+                }
+                
+                if progress > 0.8 {
+                    // Additional small cracks
+                    path.move(to: CGPoint(x: size.width * 0.3, y: size.height * 0.3))
+                    path.addLine(to: CGPoint(x: size.width * 0.35, y: size.height * 0.7))
+                    
+                    path.move(to: CGPoint(x: size.width * 0.65, y: size.height * 0.4))
+                    path.addLine(to: CGPoint(x: size.width * 0.7, y: size.height * 0.8))
+                }
+            }
+            
+            context.stroke(
+                crackPath,
+                with: .color(.black.opacity(Double(progress))),
+                lineWidth: 2
+            )
+        }
     }
 }
 

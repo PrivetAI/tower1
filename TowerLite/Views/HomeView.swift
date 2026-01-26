@@ -122,7 +122,7 @@ struct HomeView: View {
                 }
                 
                 Spacer()
-                    .frame(height: 20)
+                    .frame(minHeight: 10)
                 
                 // Bottom Navigation
                 HStack(spacing: 30) {
