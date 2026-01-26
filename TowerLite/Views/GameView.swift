@@ -16,8 +16,13 @@ struct GameView: View {
     @State private var showCountdown = true
     @State private var currentCombo = 0
     
-    private let targetZoneStart: CGFloat = 0.4
-    private let targetZoneEnd: CGFloat = 0.6
+    private var targetZoneStart: CGFloat {
+        GameSettings.targetZonePosition - (GameSettings.targetZoneWidth / 2)
+    }
+    
+    private var targetZoneEnd: CGFloat {
+        GameSettings.targetZonePosition + (GameSettings.targetZoneWidth / 2)
+    }
     
     var cycleDuration: Double {
         // Speed increases with floor level (skill-based difficulty)
@@ -107,30 +112,30 @@ struct GameView: View {
                     Spacer()
                     
                     // Instructions
-                    Text("Tap when the indicator is in the green zone!")
+                    Text("Jump when the platform aligns with you!")
                         .font(AppFonts.body(16))
                         .foregroundColor(.white.opacity(0.8))
                         .multilineTextAlignment(.center)
                         .accessibilityAddTraits(.isStaticText)
                     
-                    // Timing Indicator
-                    TimingIndicator(
+                    // Tower Climb View (The "Game Area")
+                    TowerClimbView(
                         position: indicatorPosition,
                         targetZoneStart: targetZoneStart,
                         targetZoneEnd: targetZoneEnd
                     )
-                    .frame(height: 80)
-                    .padding(.horizontal, 30)
-                    .accessibilityLabel("Timing bar. Indicator moving.")
+                    .frame(height: 300) // Much taller for the visual
+                    .padding(.horizontal, 20)
+                    .accessibilityLabel("Moving platform below you")
                     
                     Spacer()
                     
                     // Tap Button
                     Button(action: handleTap) {
-                        Text("TAP!")
+                        Text("JUMP!")
                             .font(AppFonts.title(32))
                             .foregroundColor(.white)
-                            .frame(width: 200, height: 200)
+                            .frame(width: 160, height: 160) // Slightly smaller button to balance UI
                             .background(
                                 Circle()
                                     .fill(
@@ -138,7 +143,7 @@ struct GameView: View {
                                             colors: [AppColors.accent, AppColors.accent.opacity(0.6)],
                                             center: .center,
                                             startRadius: 0,
-                                            endRadius: 100
+                                            endRadius: 80
                                         )
                                     )
                                     .shadow(color: AppColors.accent.opacity(0.5), radius: 20, y: 10)
