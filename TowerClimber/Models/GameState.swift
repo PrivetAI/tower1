@@ -95,4 +95,10 @@ class GameState: ObservableObject {
         // Higher floors = more score (skill-based progression)
         return 10 + (currentFloor * 5)
     }
+    
+    /// Reset progress without saving to history (for game over restart)
+    func resetProgress() {
+        currentFloor = 1
+        currentScore = 0
+    }
 }

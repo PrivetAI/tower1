@@ -353,11 +353,14 @@ struct GameView: View {
     }
     
     private func resetGame() {
+        // Full game reset - start from floor 1
+        gameState.resetProgress()
+        
         hasPressed = false
         gameResult = nil
         showResult = false
         isJumping = false
-        targetPosition = 0.2 // Reset to starting position
+        targetPosition = 0.2
         isMovingRight = true
         currentPlatformType = .normal
         standingOnPlatformType = .normal
@@ -367,7 +370,8 @@ struct GameView: View {
         currentPosition = 0.5
         scrollOffset = 0
         playerYOffset = 0
-        // Start game immediately without countdown
+        currentCombo = 0
+        // Start immediately without countdown
         showCountdown = false
         startLoop()
     }
