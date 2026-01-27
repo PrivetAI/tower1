@@ -327,9 +327,14 @@ struct GameView: View {
                     if let targetId = targetPlatformId,
                        let targetIndex = self.platforms.firstIndex(where: { $0.id == targetId }) {
                         self.currentPlatformIndex = targetIndex
+                        // Ensure platform xPosition is correct
+                        self.platforms[targetIndex].xPosition = self.jumpLandingX
                     } else {
-                        // Fallback: assume first platform
+                        // Fallback: assume first platform and set its position
                         self.currentPlatformIndex = 0
+                        if !self.platforms.isEmpty {
+                            self.platforms[0].xPosition = self.jumpLandingX
+                        }
                     }
                     
                     // Update target flags with corrected index
