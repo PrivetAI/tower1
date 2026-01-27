@@ -138,10 +138,31 @@ struct PlatformView: View {
                         .stroke(Color.black.opacity(0.4), lineWidth: 2)
                 )
             
-            // Cracking effect for breaking platforms
+            // Breaking countdown bar at bottom of platform
             if type == .breaking && breakingProgress > 0 {
+                VStack {
+                    Spacer()
+                    GeometryReader { geo in
+                        Rectangle()
+                            .fill(Color.red)
+                            .frame(width: geo.size.width * (1 - breakingProgress), height: 4)
+                            .animation(.linear(duration: 0.1), value: breakingProgress)
+                    }
+                    .frame(height: 4)
+                }
+                .frame(width: width - 8, height: 28)
+                
+                // More aggressive cracking
                 CrackOverlay(progress: breakingProgress)
                     .frame(width: width, height: 28)
+            }
+            
+            // Pulsing warning for breaking platform about to collapse
+            if type == .breaking && breakingProgress > 0.7 {
+                RoundedRectangle(cornerRadius: 8)
+                    .stroke(Color.red, lineWidth: 3)
+                    .frame(width: width, height: 28)
+                    .opacity(breakingProgress > 0.9 ? 1 : 0.6)
             }
             
             // Visual details

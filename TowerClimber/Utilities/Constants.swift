@@ -23,13 +23,13 @@ enum AppColors {
 
 enum GameSettings {
     // Timing game settings
-    static let indicatorCycleDuration: Double = 3.0 // Slower start for beginners
-    static let targetZoneWidth: CGFloat = 0.40 // Platform width
+    static let indicatorCycleDuration: Double = 2.5 // Starting speed
+    static let targetZoneWidth: CGFloat = 0.35 // Slightly smaller platform
     static let targetZonePosition: CGFloat = 0.5 // center
     
     // Difficulty scaling - linear progression
-    static let minCycleDuration: Double = 0.5 // Maximum speed at high floors
-    static let difficultyIncreasePerFloor: Double = 0.03 // Clear speed increase every floor (3% faster per floor)
+    static let minCycleDuration: Double = 0.4 // Maximum speed at high floors
+    static let difficultyIncreasePerFloor: Double = 0.04 // 4% faster per floor
 }
 
 enum AppFonts {

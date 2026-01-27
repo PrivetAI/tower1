@@ -217,14 +217,14 @@ struct GameView: View {
                 }
             }
             
-            // Animate moving platform side-to-side
+            // Animate moving platform (TARGET platform moves side-to-side)
             if self.currentPlatformType == .moving {
-                let movingSpeed: CGFloat = 30.0 // pixels per second
-                let maxOffset: CGFloat = 40.0
+                let movingSpeed: CGFloat = 60.0 // faster pixels per second
+                let maxOffset: CGFloat = 50.0 // wider range
                 self.movingPlatformOffset += self.movingPlatformDirection * movingSpeed * 0.016
                 if abs(self.movingPlatformOffset) >= maxOffset {
                     self.movingPlatformDirection *= -1
-                    self.movingPlatformOffset = maxOffset * self.movingPlatformDirection
+                    self.movingPlatformOffset = self.movingPlatformDirection > 0 ? -maxOffset : maxOffset
                 }
             }
         }
@@ -237,15 +237,23 @@ struct GameView: View {
         guard !isJumping && !hasPressed else { return }
         
         // Calculate collision with platform-specific tolerance
-        // Normal tolerance
-        var tolerance = (GameSettings.targetZoneWidth / 0.8) / 2
+        // Base tolerance - more forgiving
+        var tolerance = (GameSettings.targetZoneWidth / 0.8) / 2 + 0.05
         
         // Slippery platform has narrower hit zone
         if currentPlatformType == .slippery {
-            tolerance *= 0.6 // 40% harder to hit
+            tolerance *= 0.7 // 30% harder to hit
         }
         
-        let distance = abs(targetPosition - 0.5)
+        // Account for moving platform offset in hit detection
+        var effectiveTargetPosition = targetPosition
+        if currentPlatformType == .moving {
+            // Adjust hit zone based on platform offset (normalized to position space)
+            let offsetInPositionSpace = movingPlatformOffset / 300.0 // approximate screen width factor
+            effectiveTargetPosition += offsetInPositionSpace
+        }
+        
+        let distance = abs(effectiveTargetPosition - 0.5)
         let isSuccess = distance < tolerance
         
         hasPressed = true // Lock logic loop
@@ -274,6 +282,9 @@ struct GameView: View {
                     combo: self.currentCombo,
                     totalGames: self.statisticsManager.stats.totalGames
                 )
+                
+                // Update theme unlocks in real-time
+                self.themeManager.updateHighestFloor(self.gameState.currentFloor)
                 
                 SoundManager.shared.playSuccess()
                 
@@ -324,8 +335,10 @@ struct GameView: View {
             }
             
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-                 gameResult = .tryAgain
-                 showResult = true
+                // Auto-save progress on game over
+                self.autoSaveProgress()
+                gameResult = .tryAgain
+                showResult = true
             }
         }
     }
@@ -351,9 +364,9 @@ struct GameView: View {
             return
         }
         
-        // Gradually increase breaking progress over 3 seconds
+        // Gradually increase breaking progress over 2 seconds (faster, more urgency)
         let startTime = Date()
-        let duration: TimeInterval = 3.0
+        let duration: TimeInterval = 2.0
         
         Timer.scheduledTimer(withTimeInterval: 0.05, repeats: true) { timer in
             let elapsed = Date().timeIntervalSince(startTime)
@@ -378,25 +391,32 @@ struct GameView: View {
         gameTimer?.invalidate()
         gameTimer = nil
     }
-    
     private func saveAndExit() {
-        // Record game stats before saving
+        autoSaveProgress()
+        isPresented = false
+    }
+    
+    private func autoSaveProgress() {
+        // Record game stats
         statisticsManager.recordGame(
             floor: gameState.currentFloor,
             score: gameState.currentScore,
             combo: currentCombo
         )
         
+        // Update highest floor for theme unlocks
+        themeManager.updateHighestFloor(gameState.currentFloor)
+        
         // Check achievements with final stats
         achievementManager.checkAchievements(
             floor: gameState.currentFloor,
             score: gameState.currentScore,
             combo: currentCombo,
-            totalGames: statisticsManager.stats.totalGames + 1
+            totalGames: statisticsManager.stats.totalGames
         )
         
+        // Auto-save progress to history
         gameState.saveProgress()
-        isPresented = false
     }
 }
 

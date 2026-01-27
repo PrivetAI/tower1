@@ -66,6 +66,9 @@ class AchievementManager: ObservableObject {
     }
     
     func checkAchievements(floor: Int, score: Int, combo: Int, totalGames: Int) {
+        // First climb - triggered when floor > 1 (meaning player completed at least one jump)
+        if floor > 1 { unlock("first_climb") }
+        
         // Floor achievements
         if floor >= 5 { unlock("floor_5") }
         if floor >= 10 { unlock("floor_10") }
@@ -82,7 +85,6 @@ class AchievementManager: ObservableObject {
         if combo >= 10 { unlock("perfect_10") }
         
         // Games played achievements
-        if totalGames >= 1 { unlock("first_climb") }
         if totalGames >= 10 { unlock("games_10") }
         if totalGames >= 50 { unlock("games_50") }
     }
