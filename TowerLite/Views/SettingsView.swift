@@ -42,7 +42,7 @@ struct SettingsView: View {
                         VStack(spacing: 0) {
                             SettingsRow(title: "Version", value: "1.0")
                             Divider().background(Color.white.opacity(0.1))
-                            SettingsRow(title: "Developer", value: "Tower Lite Team")
+                            SettingsRow(title: "Developer", value: "Tower Climber Team")
                         }
                         .background(
                             RoundedRectangle(cornerRadius: 16)
@@ -56,7 +56,7 @@ struct SettingsView: View {
                     VStack(spacing: 8) {
                         Text("🏰")
                             .font(.system(size: 40))
-                        Text("Tower Lite")
+                        Text("Tower Climber")
                             .font(AppFonts.body(16))
                             .foregroundColor(.white.opacity(0.7))
                         Text("A skill-based timing game")

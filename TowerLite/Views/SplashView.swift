@@ -20,7 +20,7 @@ struct SplashView: View {
                     Text("🏰")
                         .font(.system(size: 80))
                     
-                    Text("Tower Lite")
+                    Text("Tower Climber")
                         .font(AppFonts.title(42))
                         .foregroundColor(.white)
                     
