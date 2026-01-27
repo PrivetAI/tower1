@@ -174,17 +174,17 @@ struct GameView: View {
             isTarget: false
         ))
         
-        // Platform 1: Target (above) - starts at edge so it moves
+        // Platform 1: Target (above) - ALWAYS starts at 0.0
         platforms.append(Platform(
-            xPosition: 0.0, // Start at left edge
+            xPosition: 0.0,
             yPosition: playerY - platformSpacing + 20,
             type: .normal,
             isTarget: true
         ))
         
-        // Platform 2: Next - starts at edge
+        // Platform 2: Next - ALWAYS starts at 0.0
         platforms.append(Platform(
-            xPosition: 1.0, // Start at right edge
+            xPosition: 0.0,
             yPosition: playerY - platformSpacing * 2 + 20,
             type: PlatformType.random(for: gameState.currentFloor + 1),
             isTarget: false
@@ -293,11 +293,10 @@ struct GameView: View {
                     // Move to next platform
                     self.currentPlatformIndex += 1
                     
-                    // Add new platform at top - start at opposite edge
+                    // Add new platform at top - ALWAYS start at 0.0 (consistent!)
                     let newYPosition = self.platforms.last!.yPosition - self.platformSpacing
-                    let startEdge: CGFloat = Bool.random() ? 0.0 : 1.0
                     self.platforms.append(Platform(
-                        xPosition: startEdge,
+                        xPosition: 0.0, // Always start at left edge
                         yPosition: newYPosition,
                         type: PlatformType.random(for: self.gameState.currentFloor + 1),
                         isTarget: false
@@ -322,11 +321,11 @@ struct GameView: View {
                         self.platforms[i].isTarget = (i == self.currentPlatformIndex + 1)
                     }
                     
-                    // Reset indicator FIRST - start at edge
-                    self.targetPosition = Bool.random() ? 0.0 : 1.0
-                    self.isMovingRight = self.targetPosition < 0.5
+                    // Reset indicator - ALWAYS start at 0.0 to match platform position
+                    self.targetPosition = 0.0
+                    self.isMovingRight = true
                     
-                    // THEN sync target platform position (prevents flicker)
+                    // Sync target platform (should already be at 0.0, but just in case)
                     if self.currentPlatformIndex + 1 < self.platforms.count {
                         self.platforms[self.currentPlatformIndex + 1].xPosition = self.targetPosition
                     }
