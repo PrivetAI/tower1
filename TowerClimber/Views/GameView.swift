@@ -267,12 +267,18 @@ struct GameView: View {
         isJumping = true
         jumpLandingX = targetPosition // Fix landing position at tap moment
         
+        // Immediately fix target platform position
+        let targetIndex = currentPlatformIndex + 1
+        if targetIndex < platforms.count {
+            platforms[targetIndex].xPosition = jumpLandingX
+        }
+        
         if isSuccess {
             SoundManager.shared.playTap()
             
-            // Jump animation - player goes up
+            // Jump animation - player goes up (slightly higher for visual reach)
             withAnimation(.easeOut(duration: 0.25)) {
-                playerYOffset = -platformSpacing
+                playerYOffset = -platformSpacing * 1.2
             }
             
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
