@@ -18,122 +18,113 @@ struct ThemedTowerAnimation: View {
     let maxHeight: CGFloat
     let theme: TowerTheme
     
-    @State private var showGlow = false
+    @State private var glowOpacity: CGFloat = 0.4
     
     var body: some View {
         VStack(spacing: 0) {
             Spacer()
             
-            ZStack(alignment: .bottom) {
-                // Tower glow effect
+            // Draw entire tower as single Canvas - no separate elements that can separate
+            Canvas { context, size in
+                let centerX = size.width / 2
+                let towerWidth: CGFloat = 60
+                let roofHeight: CGFloat = height > 20 ? 20 : 0
+                let bodyHeight = max(0, height - roofHeight)
+                let towerBottom = size.height
+                let towerTop = towerBottom - height
+                
+                // Glow effect
                 if height > 0 {
-                    RoundedRectangle(cornerRadius: 8)
-                        .fill(
-                            LinearGradient(
-                                colors: [theme.topColor.opacity(0.5), theme.baseColor.opacity(0.3)],
-                                startPoint: .top,
-                                endPoint: .bottom
-                            )
-                        )
-                        .frame(width: 80, height: height + 20)
-                        .blur(radius: 20)
-                        .opacity(showGlow ? 0.8 : 0.4)
+                    let glowRect = CGRect(
+                        x: centerX - 40,
+                        y: towerTop - 10,
+                        width: 80,
+                        height: height + 20
+                    )
+                    context.fill(
+                        Path(roundedRect: glowRect, cornerRadius: 8),
+                        with: .color(theme.topColor.opacity(0.3 * glowOpacity))
+                    )
                 }
                 
-                // Tower body - SINGLE SOLID SHAPE (no separate blocks)
-                VStack(spacing: 0) {
-                    // Roof
-                    if height > 20 {
-                        Triangle()
-                            .fill(theme.roofColor)
-                            .frame(width: 50, height: 20)
-                    }
+                // Roof (triangle)
+                if roofHeight > 0 {
+                    var roofPath = Path()
+                    roofPath.move(to: CGPoint(x: centerX, y: towerTop))
+                    roofPath.addLine(to: CGPoint(x: centerX + 30, y: towerTop + roofHeight))
+                    roofPath.addLine(to: CGPoint(x: centerX - 30, y: towerTop + roofHeight))
+                    roofPath.closeSubpath()
+                    context.fill(roofPath, with: .color(theme.roofColor))
+                }
+                
+                // Tower body
+                let bodyTop = towerTop + roofHeight
+                let bodyRect = CGRect(
+                    x: centerX - towerWidth/2,
+                    y: bodyTop,
+                    width: towerWidth,
+                    height: bodyHeight
+                )
+                
+                // Base gradient
+                let gradient = Gradient(colors: [theme.topColor, theme.baseColor])
+                context.fill(
+                    Path(roundedRect: bodyRect, cornerRadius: 4),
+                    with: .linearGradient(gradient, startPoint: CGPoint(x: 0, y: bodyTop), endPoint: CGPoint(x: 0, y: towerBottom))
+                )
+                
+                // Brick pattern
+                let brickHeight: CGFloat = 12
+                let brickWidth: CGFloat = 20
+                for row in 0..<Int(bodyHeight / brickHeight) + 1 {
+                    let y = bodyTop + CGFloat(row) * brickHeight
+                    let xOffset: CGFloat = row % 2 == 0 ? 0 : brickWidth / 2
                     
-                    // Main tower body as ONE rectangle with brick pattern
-                    ZStack {
-                        // Base gradient
-                        RoundedRectangle(cornerRadius: 4)
-                            .fill(
-                                LinearGradient(
-                                    colors: [theme.topColor, theme.baseColor],
-                                    startPoint: .top,
-                                    endPoint: .bottom
-                                )
+                    for col in 0..<4 {
+                        let x = centerX - towerWidth/2 + CGFloat(col) * brickWidth + xOffset
+                        if x < centerX + towerWidth/2 && y < towerBottom {
+                            let brickRect = CGRect(x: x, y: y, width: brickWidth - 1, height: brickHeight - 1)
+                            context.stroke(
+                                Path(roundedRect: brickRect, cornerRadius: 1),
+                                with: .color(.black.opacity(0.15)),
+                                lineWidth: 0.5
                             )
-                        
-                        // Brick pattern overlay
-                        BrickPattern(theme: theme)
-                            .clipShape(RoundedRectangle(cornerRadius: 4))
-                        
-                        // Windows column
-                        VStack(spacing: 12) {
-                            ForEach(0..<max(1, Int(height / 30)), id: \.self) { _ in
-                                HStack(spacing: 8) {
-                                    WindowGlow(color: theme.windowColor)
-                                    WindowGlow(color: theme.windowColor)
-                                }
-                            }
                         }
                     }
-                    .frame(width: 60, height: max(0, height - 20))
+                }
+                
+                // Windows (static, no animation)
+                let windowWidth: CGFloat = 10
+                let windowHeight: CGFloat = 12
+                let windowSpacing: CGFloat = 25
+                let windowsCount = max(1, Int(bodyHeight / windowSpacing))
+                
+                for i in 0..<windowsCount {
+                    let windowY = bodyTop + 10 + CGFloat(i) * windowSpacing
+                    if windowY + windowHeight < towerBottom - 5 {
+                        // Left window
+                        let leftWindowRect = CGRect(x: centerX - 12, y: windowY, width: windowWidth, height: windowHeight)
+                        context.fill(
+                            Path(roundedRect: leftWindowRect, cornerRadius: 2),
+                            with: .color(theme.windowColor.opacity(0.7))
+                        )
+                        
+                        // Right window
+                        let rightWindowRect = CGRect(x: centerX + 2, y: windowY, width: windowWidth, height: windowHeight)
+                        context.fill(
+                            Path(roundedRect: rightWindowRect, cornerRadius: 2),
+                            with: .color(theme.windowColor.opacity(0.5))
+                        )
+                    }
                 }
             }
             .frame(height: height)
         }
         .onAppear {
-            withAnimation(.easeInOut(duration: 1.5).repeatForever(autoreverses: true)) {
-                showGlow = true
+            withAnimation(.easeInOut(duration: 2).repeatForever(autoreverses: true)) {
+                glowOpacity = 1.0
             }
         }
-    }
-}
-
-// Simple brick pattern as overlay
-struct BrickPattern: View {
-    let theme: TowerTheme
-    
-    var body: some View {
-        Canvas { context, size in
-            let brickHeight: CGFloat = 12
-            let brickWidth: CGFloat = 20
-            let rows = Int(size.height / brickHeight) + 1
-            
-            for row in 0..<rows {
-                let y = CGFloat(row) * brickHeight
-                let offset: CGFloat = row % 2 == 0 ? 0 : brickWidth / 2
-                let cols = Int(size.width / brickWidth) + 2
-                
-                for col in 0..<cols {
-                    let x = CGFloat(col) * brickWidth + offset - brickWidth / 2
-                    let rect = CGRect(x: x, y: y, width: brickWidth - 1, height: brickHeight - 1)
-                    
-                    // Draw brick outline
-                    context.stroke(
-                        Path(roundedRect: rect, cornerRadius: 1),
-                        with: .color(.black.opacity(0.2)),
-                        lineWidth: 0.5
-                    )
-                }
-            }
-        }
-    }
-}
-
-// Window with glow
-struct WindowGlow: View {
-    let color: Color
-    @State private var isLit = Bool.random()
-    
-    var body: some View {
-        RoundedRectangle(cornerRadius: 2)
-            .fill(isLit ? color.opacity(0.8) : Color.black.opacity(0.5))
-            .frame(width: 10, height: 12)
-            .onAppear {
-                // Slower animation to reduce visual noise
-                withAnimation(.easeInOut(duration: Double.random(in: 3...5)).repeatForever(autoreverses: true)) {
-                    isLit.toggle()
-                }
-            }
     }
 }
 

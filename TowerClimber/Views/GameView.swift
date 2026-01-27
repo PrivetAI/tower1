@@ -115,6 +115,7 @@ struct GameView: View {
                         playerYOffset: playerYOffset,
                         playerXOffset: playerXOffset,
                         breakingProgress: breakingProgress,
+                        targetPosition: targetPosition,
                         currentPlatformId: currentPlatformIndex < platforms.count ? platforms[currentPlatformIndex].id : nil,
                         theme: themeManager.currentTheme
                     )
@@ -239,11 +240,7 @@ struct GameView: View {
                     self.isMovingRight = true
                 }
             }
-            
-            // Update target platform X position
-            if self.currentPlatformIndex + 1 < self.platforms.count {
-                self.platforms[self.currentPlatformIndex + 1].xPosition = self.targetPosition
-            }
+            // targetPosition is used directly by TowerClimbView, no need to update platform.xPosition
         }
     }
     

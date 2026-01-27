@@ -61,7 +61,8 @@ struct TowerClimbView: View {
     let playerYOffset: CGFloat
     let playerXOffset: CGFloat
     let breakingProgress: CGFloat
-    var currentPlatformId: UUID? = nil // Platform player is standing on
+    let targetPosition: CGFloat // Indicator position for target platform (0.0 to 1.0)
+    var currentPlatformId: UUID? = nil
     var theme: TowerTheme = TowerTheme.allThemes[0]
     
     var body: some View {
@@ -92,15 +93,18 @@ struct TowerClimbView: View {
                     let screenY = platform.yPosition + worldOffset
                     // Only render if on screen
                     if screenY > -50 && screenY < height + 50 {
-                        // Breaking progress only for platform player is standing on
                         let platformBreakingProgress = (platform.id == currentPlatformId && platform.type == .breaking) ? breakingProgress : 0
+                        
+                        // Target platform uses targetPosition directly (not stored xPosition)
+                        let xPos = platform.isTarget ? targetPosition : platform.xPosition
+                        
                         PlatformView(
                             width: platformWidth,
                             type: platform.type,
                             breakingProgress: platformBreakingProgress
                         )
                         .position(
-                            x: calculateX(for: platform.xPosition, width: width, platformWidth: platformWidth),
+                            x: calculateX(for: xPos, width: width, platformWidth: platformWidth),
                             y: screenY
                         )
                     }
@@ -297,13 +301,14 @@ struct TowerBackground: View {
         TowerClimbView(
             platforms: [
                 Platform(xPosition: 0.5, yPosition: 290, type: .normal),
-                Platform(xPosition: 0.7, yPosition: 150, type: .moving, isTarget: true),
-                Platform(xPosition: 0.3, yPosition: 10, type: .normal)
+                Platform(xPosition: 0.5, yPosition: 150, type: .moving, isTarget: true),
+                Platform(xPosition: 0.5, yPosition: 10, type: .normal)
             ],
             worldOffset: 0,
             playerYOffset: 0,
             playerXOffset: 0,
-            breakingProgress: 0
+            breakingProgress: 0,
+            targetPosition: 0.7
         )
         .frame(height: 400)
     }
