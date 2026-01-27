@@ -1,4 +1,4 @@
-# Tower Lite — Quick Climb
+# Tower Climber — Quick Climb
 
 Casual iOS game with one-tap timing challenges. Pure SwiftUI, iOS 15+.
 
@@ -18,15 +18,15 @@ Casual iOS game with one-tap timing challenges. Pure SwiftUI, iOS 15+.
 
 ## Getting Started
 
-1. Open `TowerLite.xcodeproj` in Xcode
+1. Open `TowerClimber.xcodeproj` in Xcode
 2. Select your development team in Signing & Capabilities
 3. Build and run on simulator or device
 
 ## Project Structure
 
 ```
-TowerLite/
-├── TowerLiteApp.swift       # App entry point
+TowerClimber/
+├── TowerClimberApp.swift       # App entry point
 ├── Models/
 │   └── GameState.swift      # Game state with UserDefaults persistence
 ├── Views/
@@ -73,11 +73,11 @@ This app does not collect, store, or share any personal data. All game progress 
 **Sample Privacy Policy text you can host:**
 
 ```
-Privacy Policy for Tower Lite
+Privacy Policy for Tower Climber
 
 Last updated: [DATE]
 
-Tower Lite does not collect, transmit, or share any personal information.
+Tower Climber does not collect, transmit, or share any personal information.
 
 Data Storage:
 - Game progress (score, floor level, history) is stored locally on your device
@@ -90,12 +90,12 @@ Contact:
 
 ### App Store Texts
 
-**Title:** Tower Lite — Quick Climb  
+**Title:** Tower Climber — Quick Climb  
 **Subtitle:** Short skill challenges. No gambling.
 
 **Description:**
 ```
-Tower Lite is a simple casual game with short timing challenges and quick floor-by-floor progression. 
+Tower Climber is a simple casual game with short timing challenges and quick floor-by-floor progression. 
 
 Features:
 • Pure skill-based gameplay — time your taps perfectly

@@ -1,7 +1,7 @@
 import SwiftUI
 
 @main
-struct TowerLiteApp: App {
+struct TowerClimberApp: App {
     @StateObject private var gameState = GameState()
     @StateObject private var achievementManager = AchievementManager()
     @StateObject private var themeManager = ThemeManager()
