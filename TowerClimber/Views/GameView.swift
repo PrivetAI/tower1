@@ -287,12 +287,10 @@ struct GameView: View {
                 }
                 
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                    // CRITICAL: Save the landing position to the platform we just landed on
-                    // This must happen BEFORE we change isTarget flags!
-                    // The platform at currentPlatformIndex+1 (current target) is where we landed
-                    let landingPosition = self.targetPosition // Where the indicator was when we jumped
+                    // Set the platform we landed on to CENTER (0.5)
+                    // Player is always rendered at center, so platform must be there too
                     if self.currentPlatformIndex + 1 < self.platforms.count {
-                        self.platforms[self.currentPlatformIndex + 1].xPosition = landingPosition
+                        self.platforms[self.currentPlatformIndex + 1].xPosition = 0.5
                     }
                     
                     // Move to next platform
