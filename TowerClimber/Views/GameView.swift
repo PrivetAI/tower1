@@ -270,6 +270,12 @@ struct GameView: View {
         if isSuccess {
             SoundManager.shared.playTap()
             
+            // Fix target platform at its current position (where player tapped)
+            let targetIndex = currentPlatformIndex + 1
+            if targetIndex < platforms.count {
+                platforms[targetIndex].xPosition = jumpLandingX
+            }
+            
             // Jump animation - player goes up
             withAnimation(.easeOut(duration: 0.25)) {
                 playerYOffset = -platformSpacing
@@ -299,13 +305,6 @@ struct GameView: View {
                 }
                 
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                    // Use fixed landing position from tap moment
-                    self.playerStandingX = self.jumpLandingX
-                    
-                    if self.currentPlatformIndex + 1 < self.platforms.count {
-                        self.platforms[self.currentPlatformIndex + 1].xPosition = self.jumpLandingX
-                    }
-                    
                     // Move to next platform
                     self.currentPlatformIndex += 1
                     

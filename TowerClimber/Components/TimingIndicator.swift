@@ -116,8 +116,12 @@ struct TowerClimbView: View {
                 // Player - positioned at current platform X
                 let playerScreenY = height * 0.65 + playerYOffset
                 
-                // Always sync with the platform the player is standing on
+                // During jump use target position (jumpLandingX), otherwise sync with current platform
                 let currentPlatformX: CGFloat = {
+                    if isJumping {
+                        // During jump, player moves to where they will land
+                        return jumpLandingX
+                    }
                     if let currentPlatform = platforms.first(where: { $0.id == currentPlatformId }) {
                         return currentPlatform.xPosition
                     }
