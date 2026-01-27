@@ -45,31 +45,34 @@ enum PlatformType: CaseIterable {
         }
     }
 }
+// Platform data for scrolling system
+struct Platform: Identifiable {
+    let id = UUID()
+    var xPosition: CGFloat // 0.0 to 1.0
+    var yPosition: CGFloat // Absolute Y in world space
+    var type: PlatformType
+    var isTarget: Bool = false // Is this the current target?
+}
 
 struct TowerClimbView: View {
-    // Current state inputs
-    let targetPosition: CGFloat
-    let currentPosition: CGFloat
-    let scrollOffset: CGFloat
-    let isJumping: Bool
-    let playerYOffset: CGFloat
-    var targetPlatformType: PlatformType = .normal
-    var currentPlatformType: PlatformType = .normal
-    var breakingProgress: CGFloat = 0.0
-    var movingPlatformOffset: CGFloat = 0.0
+    // Scrolling system
+    let platforms: [Platform]
+    let worldOffset: CGFloat // How much the world has scrolled down
+    let playerYOffset: CGFloat // Player jump animation offset
+    let playerXOffset: CGFloat // Player horizontal position (for platform movement)
+    let breakingProgress: CGFloat
     var theme: TowerTheme = TowerTheme.allThemes[0]
     
     var body: some View {
         GeometryReader { geometry in
             let width = geometry.size.width
             let height = geometry.size.height
-            
-            // Dimensions
             let platformWidth = width * GameSettings.targetZoneWidth
             let playerSize: CGFloat = 50
+            
             ZStack {
-                // Background Tower Wall with theme
-                TowerBackground(width: width, height: height, scrollOffset: scrollOffset, theme: theme)
+                // Background Tower Wall
+                TowerBackground(width: width, height: height, scrollOffset: worldOffset, theme: theme)
                 
                 // Pillars (Rails)
                 HStack {
@@ -83,32 +86,31 @@ struct TowerClimbView: View {
                 }
                 .frame(width: width * 0.95)
                 
-                // --- MOVING ELEMENTS ---
+                // All platforms with scrolling
+                ForEach(platforms) { platform in
+                    let screenY = platform.yPosition + worldOffset
+                    // Only render if on screen
+                    if screenY > -50 && screenY < height + 50 {
+                        PlatformView(
+                            width: platformWidth,
+                            type: platform.type,
+                            breakingProgress: platform.isTarget ? 0 : breakingProgress
+                        )
+                        .position(
+                            x: calculateX(for: platform.xPosition, width: width, platformWidth: platformWidth),
+                            y: screenY
+                        )
+                    }
+                }
                 
-                // 1. Current Platform (Bottom) - moves if standing on moving platform
-                let currentPlatformXOffset = (currentPlatformType == .moving) ? movingPlatformOffset : 0
-                PlatformView(width: platformWidth, type: currentPlatformType, breakingProgress: breakingProgress)
-                    .position(
-                        x: calculateX(for: currentPosition, width: width, platformWidth: platformWidth) + currentPlatformXOffset,
-                        y: height * 0.75 + scrollOffset
-                    )
-                
-                // 2. Target Platform (Top) - static, no offset
-                PlatformView(width: platformWidth, type: targetPlatformType)
-                    .position(
-                        x: calculateX(for: targetPosition, width: width, platformWidth: platformWidth),
-                        y: height * 0.35 + scrollOffset
-                    )
-                
-                // 3. Player - moves with platform (moving) or slides independently (slippery)
-                let playerXOffset: CGFloat = movingPlatformOffset // Both cases move player
+                // Player - always at fixed screen position, moves with world
+                let playerScreenY = height * 0.65 + playerYOffset
                 Image("climber")
                     .resizable()
                     .scaledToFit()
                     .frame(width: playerSize * 1.3, height: playerSize * 1.3)
                     .shadow(color: Color.black.opacity(0.4), radius: 6, y: 4)
-                    .position(x: width / 2 + playerXOffset, y: height * 0.75 - playerSize * 0.9 + playerYOffset + scrollOffset)
-                    
+                    .position(x: width / 2 + playerXOffset, y: playerScreenY)
             }
             .clipped()
         }

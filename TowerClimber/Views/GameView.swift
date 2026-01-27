@@ -7,19 +7,23 @@ struct GameView: View {
     @EnvironmentObject var achievementManager: AchievementManager
     @Binding var isPresented: Bool
     
-    @State private var targetPosition: CGFloat = 0.5 // The moving platform (Top)
-    @State private var currentPosition: CGFloat = 0.5 // The static platform (Bottom)
-    @State private var scrollOffset: CGFloat = 0
-    @State private var playerYOffset: CGFloat = 0
-    @State private var isJumping = false
-    @State private var currentPlatformType: PlatformType = .normal // The target platform (Top)
-    @State private var standingOnPlatformType: PlatformType = .normal // The platform under player (Bottom)
-    @State private var gameTimer: Timer? // Manual timer for game loop
-    @State private var breakingProgress: CGFloat = 0.0 // 0.0 to 1.0 for cracking animation
-    @State private var movingPlatformOffset: CGFloat = 0.0 // Side-to-side movement
-    @State private var movingPlatformDirection: CGFloat = 1.0 // 1.0 or -1.0
+    // Platform system
+    @State private var platforms: [Platform] = []
+    @State private var worldOffset: CGFloat = 0 // Scrolls down as player climbs
+    @State private var currentPlatformIndex: Int = 0 // Which platform player is standing on
     
-    // Legacy State (Restored)
+    // Player state
+    @State private var playerYOffset: CGFloat = 0 // Jump animation
+    @State private var playerXOffset: CGFloat = 0 // Platform movement
+    @State private var isJumping = false
+    
+    // Game loop
+    @State private var targetPosition: CGFloat = 0.5 // Moving indicator on target platform
+    @State private var isMovingRight = true
+    @State private var gameTimer: Timer?
+    @State private var breakingProgress: CGFloat = 0.0
+    
+    // UI State
     @State private var gameResult: GameResult?
     @State private var hasPressed = false
     @State private var showResult = false
@@ -27,16 +31,11 @@ struct GameView: View {
     @State private var showCountdown = true
     @State private var currentCombo = 0
     
-    // Animation constants
-    // TowerClimbView height = 420
-    // Distance = 168 pixels, but adding boost to ensure it visually CLEARS the gap
-    private let floorHeight: CGFloat = 230 // Huge jump to guarantee clearance
-    
-    // Movement Logic
-    @State private var isMovingRight = true
+    // Constants
+    private let platformSpacing: CGFloat = 140 // Vertical distance between platforms
+    private let viewHeight: CGFloat = 420
     
     var cycleDuration: Double {
-        // Speed increases with floor level (skill-based difficulty)
         max(GameSettings.minCycleDuration,
             GameSettings.indicatorCycleDuration - Double(gameState.currentFloor - 1) * GameSettings.difficultyIncreasePerFloor)
     }
@@ -47,7 +46,6 @@ struct GameView: View {
                 .ignoresSafeArea()
             
             if showCountdown {
-                // Countdown
                 VStack(spacing: 20) {
                     Text("Floor \(gameState.currentFloor)")
                         .font(AppFonts.title(24))
@@ -59,22 +57,14 @@ struct GameView: View {
                         .scaleEffect(countdown > 0 ? 1.0 : 1.5)
                 }
             } else if showResult, let result = gameResult {
-                // Result
                 ResultView(
                     result: result,
                     combo: currentCombo,
-                    onContinue: {
-                        resetGame()
-                    },
-                    onSaveProgress: {
-                        saveAndExit()
-                    },
-                    onExit: {
-                        isPresented = false
-                    }
+                    onContinue: { resetGame() },
+                    onSaveProgress: { saveAndExit() },
+                    onExit: { isPresented = false }
                 )
             } else {
-                // Game
                 VStack(spacing: 0) {
                     // Header
                     HStack {
@@ -114,20 +104,16 @@ struct GameView: View {
                     
                     Spacer()
                     
-                    // The Tower View (Game Area)
+                    // Tower View
                     TowerClimbView(
-                        targetPosition: targetPosition,
-                        currentPosition: currentPosition,
-                        scrollOffset: scrollOffset,
-                        isJumping: isJumping,
+                        platforms: platforms,
+                        worldOffset: worldOffset,
                         playerYOffset: playerYOffset,
-                        targetPlatformType: currentPlatformType,
-                        currentPlatformType: standingOnPlatformType,
+                        playerXOffset: playerXOffset,
                         breakingProgress: breakingProgress,
-                        movingPlatformOffset: movingPlatformOffset,
                         theme: themeManager.currentTheme
                     )
-                    .frame(height: 420)
+                    .frame(height: viewHeight)
                     .padding(.horizontal, 16)
                     .clipped()
                     
@@ -152,7 +138,7 @@ struct GameView: View {
                                     .shadow(color: AppColors.accent.opacity(0.5), radius: 15, y: 8)
                             )
                     }
-                    .disabled(isJumping || hasPressed) // Lock input during jump
+                    .disabled(isJumping || hasPressed)
                     .opacity(isJumping ? 0.5 : 1.0)
                     
                     Spacer().frame(height: 50)
@@ -160,6 +146,7 @@ struct GameView: View {
             }
         }
         .onAppear {
+            initializePlatforms()
             startCountdown()
         }
         .onDisappear {
@@ -168,15 +155,44 @@ struct GameView: View {
         }
     }
     
+    // MARK: - Platform Management
+    
+    private func initializePlatforms() {
+        platforms = []
+        let playerY: CGFloat = viewHeight * 0.65
+        
+        // Create initial platforms
+        // Platform 0: Current (where player stands)
+        platforms.append(Platform(
+            xPosition: 0.5,
+            yPosition: playerY + 20, // Slightly below player
+            type: .normal,
+            isTarget: false
+        ))
+        
+        // Platform 1: Target (above)
+        platforms.append(Platform(
+            xPosition: 0.2, // Start position for indicator
+            yPosition: playerY - platformSpacing + 20,
+            type: .normal,
+            isTarget: true
+        ))
+        
+        // Platform 2: Next (for seamless look)
+        platforms.append(Platform(
+            xPosition: CGFloat.random(in: 0.2...0.8),
+            yPosition: playerY - platformSpacing * 2 + 20,
+            type: PlatformType.random(for: gameState.currentFloor + 1),
+            isTarget: false
+        ))
+        
+        currentPlatformIndex = 0
+        worldOffset = 0
+    }
+    
     private func startCountdown() {
         countdown = 3
         showCountdown = true
-        // Reset state
-        currentPosition = 0.5
-        targetPosition = 0.2 // Start closer to center so early taps don't immediately fail
-        isMovingRight = true
-        scrollOffset = 0
-        playerYOffset = 0
         
         Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { timer in
             SoundManager.shared.playCountdown()
@@ -195,14 +211,14 @@ struct GameView: View {
         isJumping = false
         gameTimer?.invalidate()
         
-        // Manual game loop for accurate collision detection
+        // Update target platform position (indicator moves)
         gameTimer = Timer.scheduledTimer(withTimeInterval: 0.016, repeats: true) { _ in
             guard !self.hasPressed && !self.showResult else {
                 self.gameTimer?.invalidate()
                 return
             }
             
-            // Move target indicator
+            // Move indicator on target platform
             let speed = 0.016 / (self.cycleDuration / 2)
             if self.isMovingRight {
                 self.targetPosition += speed
@@ -218,123 +234,112 @@ struct GameView: View {
                 }
             }
             
-            // Animate CURRENT platform when standing on special types
-            // Blue (moving) - the platform itself moves with the player on it
-            if self.standingOnPlatformType == .moving {
-                let movingSpeed: CGFloat = 50.0 // pixels per second
-                let maxOffset: CGFloat = 40.0
-                self.movingPlatformOffset += self.movingPlatformDirection * movingSpeed * 0.016
-                if abs(self.movingPlatformOffset) >= maxOffset {
-                    self.movingPlatformDirection *= -1
-                }
-            }
-            
-            // Green (slippery) - the player slides on the platform
-            if self.standingOnPlatformType == .slippery {
-                let slideSpeed: CGFloat = 80.0
-                let maxSlide: CGFloat = 30.0
-                self.movingPlatformOffset += self.movingPlatformDirection * slideSpeed * 0.016
-                if abs(self.movingPlatformOffset) >= maxSlide {
-                    self.movingPlatformDirection *= -1
-                }
-            }
-            
-            // Reset offset if on normal/breaking platform
-            if self.standingOnPlatformType == .normal || self.standingOnPlatformType == .breaking {
-                self.movingPlatformOffset = 0
+            // Update target platform X position
+            if self.currentPlatformIndex + 1 < self.platforms.count {
+                self.platforms[self.currentPlatformIndex + 1].xPosition = self.targetPosition
             }
         }
     }
     
-    // Legacy function removed
-    private func animateTarget() {}
-    
     private func handleTap() {
         guard !isJumping && !hasPressed else { return }
         
-        // Calculate collision - simple and forgiving
-        // Platform is "hit" if it's anywhere near the center
-        let platformWidth = GameSettings.targetZoneWidth
-        let tolerance = platformWidth / 2 + 0.1 // Very forgiving - platform edge to center + buffer
-        
+        // Check if target platform is near center
+        let tolerance: CGFloat = GameSettings.targetZoneWidth / 2 + 0.15
         let distance = abs(targetPosition - 0.5)
         let isSuccess = distance < tolerance
         
-        hasPressed = true // Lock logic loop
-        isJumping = true  // Lock input
+        hasPressed = true
+        isJumping = true
         
         if isSuccess {
-            // SUCCESS SEQUENCE
             SoundManager.shared.playTap()
             
-            // 1. Jump Up Animation
-            withAnimation(.easeOut(duration: 0.3)) {
-                playerYOffset = -floorHeight // Move player UP effectively
+            // Jump animation - player goes up
+            withAnimation(.easeOut(duration: 0.25)) {
+                playerYOffset = -platformSpacing
             }
             
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                // 2. Landed. Update stats.
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
+                // Update game state
                 self.gameState.addScore(self.gameState.calculateScoreForFloor())
                 self.gameState.climbFloor()
                 self.currentCombo += 1
                 self.statisticsManager.recordSuccess(score: self.gameState.currentScore)
                 
-                // Check for achievements after each successful jump
                 self.achievementManager.checkAchievements(
                     floor: self.gameState.currentFloor,
                     score: self.gameState.currentScore,
                     combo: self.currentCombo,
                     totalGames: self.statisticsManager.stats.totalGames
                 )
-                
-                // Update theme unlocks in real-time
                 self.themeManager.updateHighestFloor(self.gameState.currentFloor)
                 
                 SoundManager.shared.playSuccess()
                 
-                // SEAMLESS TRANSITION - no view reset!
-                // Just swap platforms instantly and continue
-                self.currentPosition = self.targetPosition
-                self.standingOnPlatformType = self.currentPlatformType
-                self.currentPlatformType = PlatformType.random(for: self.gameState.currentFloor)
-                self.targetPosition = self.isMovingRight ? 0.0 : 1.0
-                self.playerYOffset = 0
-                self.hasPressed = false
-                self.movingPlatformOffset = 0.0
-                self.movingPlatformDirection = 1.0
+                // Scroll world down smoothly
+                withAnimation(.easeInOut(duration: 0.3)) {
+                    self.worldOffset += self.platformSpacing
+                    self.playerYOffset = 0
+                }
                 
-                self.startLoop()
-                self.startBreakingAnimation()
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                    // Move to next platform
+                    self.currentPlatformIndex += 1
+                    
+                    // Add new platform at top
+                    let newY = self.platforms.last!.yPosition - self.platformSpacing
+                    self.platforms.append(Platform(
+                        xPosition: CGFloat.random(in: 0.1...0.9),
+                        yPosition: newY,
+                        type: PlatformType.random(for: self.gameState.currentFloor + 1),
+                        isTarget: false
+                    ))
+                    
+                    // Update target flags
+                    for i in 0..<self.platforms.count {
+                        self.platforms[i].isTarget = (i == self.currentPlatformIndex + 1)
+                    }
+                    
+                    // Remove old platforms that are off screen
+                    self.platforms.removeAll { platform in
+                        platform.yPosition + self.worldOffset > self.viewHeight + 100
+                    }
+                    
+                    // Reset for next jump
+                    self.targetPosition = Bool.random() ? 0.0 : 1.0
+                    self.isMovingRight = self.targetPosition < 0.5
+                    self.hasPressed = false
+                    self.isJumping = false
+                    
+                    self.startLoop()
+                }
             }
             
         } else {
-            // FAILURE SEQUENCE
-             SoundManager.shared.playTap()
+            // Failure
+            SoundManager.shared.playTap()
             
-            // 1. Jump Up...
             withAnimation(.easeOut(duration: 0.2)) {
-                playerYOffset = -floorHeight * 0.5 // Short hop
+                playerYOffset = -platformSpacing * 0.5
             }
             
-            // 2. Fall Down!
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
                 SoundManager.shared.playMiss()
                 withAnimation(.easeIn(duration: 0.5)) {
-                    playerYOffset = 500 // Fall off screen
+                    self.playerYOffset = 500
                 }
             }
             
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-                // Auto-save progress on game over
                 self.autoSaveProgress()
-                gameResult = .tryAgain
-                showResult = true
+                self.gameResult = .tryAgain
+                self.showResult = true
             }
         }
     }
     
     private func resetGame() {
-        // Full game reset - start from floor 1
         gameState.resetProgress()
         
         hasPressed = false
@@ -343,78 +348,34 @@ struct GameView: View {
         isJumping = false
         targetPosition = 0.2
         isMovingRight = true
-        currentPlatformType = .normal
-        standingOnPlatformType = .normal
         breakingProgress = 0.0
-        movingPlatformOffset = 0.0
-        movingPlatformDirection = 1.0
-        currentPosition = 0.5
-        scrollOffset = 0
+        playerXOffset = 0.0
         playerYOffset = 0
         currentCombo = 0
-        // Start immediately without countdown
+        worldOffset = 0
+        
+        initializePlatforms()
         showCountdown = false
         startLoop()
     }
     
-    private func startBreakingAnimation() {
-        guard standingOnPlatformType == .breaking else {
-            breakingProgress = 0.0
-            return
-        }
-        
-        // Gradually increase breaking progress over 2 seconds (faster, more urgency)
-        let startTime = Date()
-        let duration: TimeInterval = 2.0
-        
-        Timer.scheduledTimer(withTimeInterval: 0.05, repeats: true) { timer in
-            let elapsed = Date().timeIntervalSince(startTime)
-            self.breakingProgress = min(CGFloat(elapsed / duration), 1.0)
-            
-            if elapsed >= duration {
-                timer.invalidate()
-                // Platform breaks - game over
-                self.gameResult = .tryAgain
-                self.showResult = true
-                self.stopGameLoop()
-                SoundManager.shared.playTap() // Fail sound
-            }
-            
-            if self.hasPressed {
-                timer.invalidate()
-            }
-        }
-    }
-    
-    private func stopGameLoop() {
-        gameTimer?.invalidate()
-        gameTimer = nil
-    }
     private func saveAndExit() {
-        autoSaveProgress()
         isPresented = false
     }
     
     private func autoSaveProgress() {
-        // Record game stats
         statisticsManager.recordGame(
             floor: gameState.currentFloor,
             score: gameState.currentScore,
             combo: currentCombo
         )
-        
-        // Update highest floor for theme unlocks
         themeManager.updateHighestFloor(gameState.currentFloor)
-        
-        // Check achievements with final stats
         achievementManager.checkAchievements(
             floor: gameState.currentFloor,
             score: gameState.currentScore,
             combo: currentCombo,
             totalGames: statisticsManager.stats.totalGames
         )
-        
-        // Auto-save progress to history
         gameState.saveProgress()
     }
 }

@@ -108,13 +108,21 @@ struct ResultView: View {
             
             // Buttons
             VStack(spacing: 16) {
+                // Show that progress was saved
+                if gameState.currentScore > 0 {
+                    Text("Progress saved!")
+                        .font(AppFonts.body(14))
+                        .foregroundColor(AppColors.gold.opacity(0.8))
+                        .padding(.bottom, 8)
+                }
+                
                 Button(action: {
                     SoundManager.shared.playButton()
                     onContinue()
                 }) {
                     HStack {
-                        Image(systemName: "arrow.up.circle.fill")
-                        Text("Continue Climbing")
+                        Image(systemName: "arrow.clockwise.circle.fill")
+                        Text("Try Again")
                     }
                     .font(AppFonts.title(20))
                     .foregroundColor(.white)
@@ -131,38 +139,17 @@ struct ResultView: View {
                             )
                     )
                 }
-                .accessibilityLabel("Continue climbing")
-                
-                if gameState.currentScore > 0 {
-                    Button(action: {
-                        SoundManager.shared.playButton()
-                        onSaveProgress()
-                    }) {
-                        HStack {
-                            Image(systemName: "square.and.arrow.down.fill")
-                            Text("Save \(gameState.currentScore) Points")
-                        }
-                        .font(AppFonts.body(18))
-                        .foregroundColor(AppColors.gold)
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 50)
-                        .background(
-                            RoundedRectangle(cornerRadius: 25)
-                                .stroke(AppColors.gold, lineWidth: 2)
-                        )
-                    }
-                    .accessibilityLabel("Save \(gameState.currentScore) points")
-                }
+                .accessibilityLabel("Try again")
                 
                 Button(action: {
                     SoundManager.shared.playButton()
                     onExit()
                 }) {
-                    Text("Exit")
+                    Text("Exit to Menu")
                         .font(AppFonts.body(16))
                         .foregroundColor(.white.opacity(0.6))
                 }
-                .accessibilityLabel("Exit game")
+                .accessibilityLabel("Exit to menu")
             }
             .padding(.horizontal, 30)
             .opacity(showContent ? 1 : 0)

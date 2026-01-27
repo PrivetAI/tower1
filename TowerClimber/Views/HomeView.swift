@@ -11,7 +11,6 @@ struct HomeView: View {
     @State private var showThemes = false
     @State private var showStatistics = false
     @State private var showSettings = false
-    @State private var showSaveProgressAlert = false
     @State private var climbButtonScale: CGFloat = 1.0
     @State private var showAchievementPopup = false
     
@@ -98,29 +97,6 @@ struct HomeView: View {
                     }
                 }
                 
-                // Save Progress Button
-                if gameState.currentScore > 0 {
-                    Button(action: {
-                        SoundManager.shared.playButton()
-                        showSaveProgressAlert = true
-                    }) {
-                        HStack(spacing: 8) {
-                            Image(systemName: "square.and.arrow.down.fill")
-                            Text("Save Progress")
-                                .font(AppFonts.body(18))
-                        }
-                        .foregroundColor(AppColors.gold)
-                        .padding(.horizontal, 24)
-                        .padding(.vertical, 14)
-                        .background(
-                            RoundedRectangle(cornerRadius: 25)
-                                .stroke(AppColors.gold, lineWidth: 2)
-                        )
-                    }
-                    .accessibilityLabel("Save progress")
-                    .accessibilityHint("Save your current score of \(gameState.currentScore) and start a new climb")
-                }
-                
                 Spacer()
                     .frame(minHeight: 10)
                 
@@ -183,14 +159,6 @@ struct HomeView: View {
         }
         .sheet(isPresented: $showSettings) {
             SettingsView()
-        }
-        .alert("Save Progress?", isPresented: $showSaveProgressAlert) {
-            Button("Cancel", role: .cancel) {}
-            Button("Save \(gameState.currentScore) pts") {
-                gameState.saveProgress()
-            }
-        } message: {
-            Text("Your score of \(gameState.currentScore) will be saved to history. You'll start a new climb from floor 1.")
         }
         .onChange(of: achievementManager.newlyUnlocked) { _ in
             if achievementManager.newlyUnlocked != nil {
