@@ -358,11 +358,13 @@ struct GameView: View {
             // Failure
             SoundManager.shared.playTap()
             
-            withAnimation(.easeOut(duration: 0.2)) {
-                playerYOffset = -platformSpacing * 0.5
+            // Jump animation - player goes UP fully like a success jump
+            withAnimation(.easeOut(duration: 0.25)) {
+                playerYOffset = -platformSpacing
             }
             
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+            // Then falls down
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
                 SoundManager.shared.playMiss()
                 withAnimation(.easeIn(duration: 0.5)) {
                     self.playerYOffset = 500
