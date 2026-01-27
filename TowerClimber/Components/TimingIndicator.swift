@@ -48,15 +48,16 @@ enum PlatformType: CaseIterable {
 
 struct TowerClimbView: View {
     // Current state inputs
-    let targetPosition: CGFloat // 0.0 to 1.0 (The moving platform ABOVE)
-    let currentPosition: CGFloat // 0.0 to 1.0 (The static platform BELOW)
-    let scrollOffset: CGFloat // Vertical scroll of the world (0 = resting, positive = scrolling down)
-    let isJumping: Bool // Is the player currently mid-air?
-    let playerYOffset: CGFloat // Vertical animation offset for the player jump
+    let targetPosition: CGFloat
+    let currentPosition: CGFloat
+    let scrollOffset: CGFloat
+    let isJumping: Bool
+    let playerYOffset: CGFloat
     var targetPlatformType: PlatformType = .normal
     var currentPlatformType: PlatformType = .normal
-    var breakingProgress: CGFloat = 0.0 // 0.0 = no cracks, 1.0 = fully cracked
-    var movingPlatformOffset: CGFloat = 0.0 // Side-to-side movement for moving platform
+    var breakingProgress: CGFloat = 0.0
+    var movingPlatformOffset: CGFloat = 0.0
+    var theme: TowerTheme = TowerTheme.allThemes[0]
     
     var body: some View {
         GeometryReader { geometry in
@@ -67,8 +68,8 @@ struct TowerClimbView: View {
             let platformWidth = width * GameSettings.targetZoneWidth
             let playerSize: CGFloat = 50
             ZStack {
-                // Background Tower Wall (Infinite scrolling brick pattern)
-                TowerBackground(width: width, height: height, scrollOffset: scrollOffset)
+                // Background Tower Wall with theme
+                TowerBackground(width: width, height: height, scrollOffset: scrollOffset, theme: theme)
                 
                 // Pillars (Rails)
                 HStack {
@@ -230,18 +231,19 @@ struct TowerBackground: View {
     let width: CGFloat
     let height: CGFloat
     let scrollOffset: CGFloat
+    var theme: TowerTheme = TowerTheme.allThemes[0]
     
     var body: some View {
         GeometryReader { _ in
             let brickHeight: CGFloat = 25
             let brickWidth: CGFloat = 50
-            let rows = Int(height / brickHeight) + 6 // Extra rows for scrolling buffer
+            let rows = Int(height / brickHeight) + 6
             let cols = Int(width / brickWidth) + 2
             
             ZStack {
-                // Base gradient
+                // Base gradient using theme colors
                 LinearGradient(
-                    colors: [Color(hex: "4a3728"), Color(hex: "3d2d22"), Color(hex: "2d1f18")],
+                    colors: [theme.baseColor, theme.topColor.opacity(0.8), theme.baseColor.opacity(0.6)],
                     startPoint: .top,
                     endPoint: .bottom
                 )

@@ -124,7 +124,8 @@ struct GameView: View {
                         targetPlatformType: currentPlatformType,
                         currentPlatformType: standingOnPlatformType,
                         breakingProgress: breakingProgress,
-                        movingPlatformOffset: movingPlatformOffset
+                        movingPlatformOffset: movingPlatformOffset,
+                        theme: themeManager.currentTheme
                     )
                     .frame(height: 420)
                     .padding(.horizontal, 16)
@@ -251,24 +252,12 @@ struct GameView: View {
     private func handleTap() {
         guard !isJumping && !hasPressed else { return }
         
-        // Calculate collision with platform-specific tolerance
-        // Base tolerance - more forgiving
-        var tolerance = (GameSettings.targetZoneWidth / 0.8) / 2 + 0.05
+        // Calculate collision - simple and forgiving
+        // Platform is "hit" if it's anywhere near the center
+        let platformWidth = GameSettings.targetZoneWidth
+        let tolerance = platformWidth / 2 + 0.1 // Very forgiving - platform edge to center + buffer
         
-        // Slippery platform has narrower hit zone
-        if currentPlatformType == .slippery {
-            tolerance *= 0.7 // 30% harder to hit
-        }
-        
-        // Account for moving platform offset in hit detection
-        var effectiveTargetPosition = targetPosition
-        if currentPlatformType == .moving {
-            // Adjust hit zone based on platform offset (normalized to position space)
-            let offsetInPositionSpace = movingPlatformOffset / 300.0 // approximate screen width factor
-            effectiveTargetPosition += offsetInPositionSpace
-        }
-        
-        let distance = abs(effectiveTargetPosition - 0.5)
+        let distance = abs(targetPosition - 0.5)
         let isSuccess = distance < tolerance
         
         hasPressed = true // Lock logic loop
@@ -303,33 +292,19 @@ struct GameView: View {
                 
                 SoundManager.shared.playSuccess()
                 
-                // 3. Scroll World Down
-                withAnimation(.easeInOut(duration: 0.5)) {
-                    self.scrollOffset = self.floorHeight // Move world DOWN
-                    self.playerYOffset = 0 // Player moves 'down' relative to world (stays stuck to platform)
-                }
+                // SEAMLESS TRANSITION - no view reset!
+                // Just swap platforms instantly and continue
+                self.currentPosition = self.targetPosition
+                self.standingOnPlatformType = self.currentPlatformType
+                self.currentPlatformType = PlatformType.random(for: self.gameState.currentFloor)
+                self.targetPosition = self.isMovingRight ? 0.0 : 1.0
+                self.playerYOffset = 0
+                self.hasPressed = false
+                self.movingPlatformOffset = 0.0
+                self.movingPlatformDirection = 1.0
                 
-                // 4. Reset for next floor
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                    self.scrollOffset = 0
-                    
-                    // Seamless transition: Current position becomes where we landed
-                    self.currentPosition = self.targetPosition
-                    self.standingOnPlatformType = self.currentPlatformType
-                    
-                    // Randomize next platform type based on floor
-                    self.currentPlatformType = PlatformType.random(for: self.gameState.currentFloor)
-                    
-                    self.targetPosition = self.isMovingRight ? 0.0 : 1.0
-                    self.hasPressed = false
-                    
-                    // Reset moving platform offset for next platform
-                    self.movingPlatformOffset = 0.0
-                    self.movingPlatformDirection = 1.0
-                    
-                    self.startLoop()
-                    self.startBreakingAnimation()
-                }
+                self.startLoop()
+                self.startBreakingAnimation()
             }
             
         } else {
