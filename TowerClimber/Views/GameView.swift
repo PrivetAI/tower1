@@ -31,9 +31,13 @@ struct GameView: View {
     @State private var showCountdown = true
     @State private var currentCombo = 0
     
-    // Constants
-    private let platformSpacing: CGFloat = 140 // Vertical distance between platforms
-    private let viewHeight: CGFloat = 420
+    // Constants - adaptive for iPad
+    private var platformSpacing: CGFloat {
+        UIDevice.current.userInterfaceIdiom == .pad ? 200 : 140
+    }
+    private var viewHeight: CGFloat {
+        UIDevice.current.userInterfaceIdiom == .pad ? 600 : 420
+    }
     
     var cycleDuration: Double {
         max(GameSettings.minCycleDuration,
@@ -318,14 +322,14 @@ struct GameView: View {
                         self.platforms[i].isTarget = (i == self.currentPlatformIndex + 1)
                     }
                     
-                    // Sync target platform position with targetPosition
+                    // Reset indicator FIRST - start at edge
+                    self.targetPosition = Bool.random() ? 0.0 : 1.0
+                    self.isMovingRight = self.targetPosition < 0.5
+                    
+                    // THEN sync target platform position (prevents flicker)
                     if self.currentPlatformIndex + 1 < self.platforms.count {
                         self.platforms[self.currentPlatformIndex + 1].xPosition = self.targetPosition
                     }
-                    
-                    // Reset indicator - start at edge
-                    self.targetPosition = Bool.random() ? 0.0 : 1.0
-                    self.isMovingRight = self.targetPosition < 0.5
                     self.hasPressed = false
                     self.isJumping = false
                     
