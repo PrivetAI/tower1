@@ -98,8 +98,8 @@ struct TowerClimbView: View {
                     if screenY > -50 && screenY < height + 50 {
                         let platformBreakingProgress = (platform.id == currentPlatformId && platform.type == .breaking) ? breakingProgress : 0
                         
-                        // Target platform uses fixed position when jumping, otherwise targetPosition
-                        let xPos = platform.isTarget ? (isJumping ? jumpLandingX : targetPosition) : platform.xPosition
+                        // All platforms always use their xPosition
+                        let xPos = platform.xPosition
                         
                         PlatformView(
                             width: platformWidth,
@@ -115,7 +115,18 @@ struct TowerClimbView: View {
                 
                 // Player - positioned at current platform X
                 let playerScreenY = height * 0.65 + playerYOffset
-                let playerX = calculateX(for: currentPlatformXPosition, width: width, platformWidth: platformWidth)
+                // Use jumpLandingX during jump, otherwise use platform xPosition
+                let currentPlatformX: CGFloat = {
+                    if isJumping {
+                        return currentPlatformXPosition // stays at pre-jump position
+                    }
+                    // Find current platform and use its xPosition
+                    if let currentPlatform = platforms.first(where: { $0.id == currentPlatformId }) {
+                        return currentPlatform.xPosition
+                    }
+                    return currentPlatformXPosition
+                }()
+                let playerX = calculateX(for: currentPlatformX, width: width, platformWidth: platformWidth)
                 Image("climber")
                     .resizable()
                     .scaledToFit()

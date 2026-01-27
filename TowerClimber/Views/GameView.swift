@@ -200,6 +200,8 @@ struct GameView: View {
         worldOffset = 0
         targetPosition = 0.0
         isMovingRight = true
+        playerStandingX = 0.5 // Player starts at center
+        jumpLandingX = 0.5
     }
     
     private func startCountdown() {
@@ -245,7 +247,11 @@ struct GameView: View {
                     self.isMovingRight = true
                 }
             }
-            // targetPosition is used directly by TowerClimbView, no need to update platform.xPosition
+            // Update target platform xPosition directly
+            let targetIndex = self.currentPlatformIndex + 1
+            if targetIndex < self.platforms.count {
+                self.platforms[targetIndex].xPosition = self.targetPosition
+            }
         }
     }
     
@@ -378,13 +384,15 @@ struct GameView: View {
         gameResult = nil
         showResult = false
         isJumping = false
-        targetPosition = 0.2
+        targetPosition = 0.0
         isMovingRight = true
         breakingProgress = 0.0
         playerXOffset = 0.0
         playerYOffset = 0
         currentCombo = 0
         worldOffset = 0
+        playerStandingX = 0.5
+        jumpLandingX = 0.5
         
         initializePlatforms()
         showCountdown = false
