@@ -13,11 +13,11 @@ enum PlatformType: CaseIterable {
         case .normal:
             return LinearGradient(colors: [Color(hex: "8d6e63"), Color(hex: "6d4c41")], startPoint: .top, endPoint: .bottom)
         case .breaking:
-            return LinearGradient(colors: [Color(hex: "e74c3c"), Color(hex: "c0392b")], startPoint: .top, endPoint: .bottom)
+            return LinearGradient(colors: [Color(hex: "ff4444"), Color(hex: "cc0000")], startPoint: .top, endPoint: .bottom)
         case .moving:
-            return LinearGradient(colors: [Color(hex: "3498db"), Color(hex: "2980b9")], startPoint: .top, endPoint: .bottom)
+            return LinearGradient(colors: [Color(hex: "00bfff"), Color(hex: "0080ff")], startPoint: .top, endPoint: .bottom)
         case .slippery:
-            return LinearGradient(colors: [Color(hex: "1abc9c"), Color(hex: "16a085")], startPoint: .top, endPoint: .bottom)
+            return LinearGradient(colors: [Color(hex: "00ff88"), Color(hex: "00cc66")], startPoint: .top, endPoint: .bottom)
         }
     }
     
@@ -91,10 +91,10 @@ struct TowerClimbView: View {
                         y: height * 0.75 + scrollOffset
                     )
                 
-                // 2. Target Platform (Top) - with moving offset
+                // 2. Target Platform (Top) - with moving offset for moving/slippery types
                 PlatformView(width: platformWidth, type: targetPlatformType)
                     .position(
-                        x: calculateX(for: targetPosition, width: width, platformWidth: platformWidth) + (targetPlatformType == .moving ? movingPlatformOffset : 0),
+                        x: calculateX(for: targetPosition, width: width, platformWidth: platformWidth) + movingPlatformOffset,
                         y: height * 0.35 + scrollOffset
                     )
                 
@@ -129,14 +129,54 @@ struct PlatformView: View {
     
     var body: some View {
         ZStack {
+            // Glow effect for special platforms
+            if type == .moving {
+                RoundedRectangle(cornerRadius: 10)
+                    .fill(Color.cyan.opacity(0.4))
+                    .frame(width: width + 10, height: 36)
+                    .blur(radius: 8)
+            }
+            if type == .slippery {
+                RoundedRectangle(cornerRadius: 10)
+                    .fill(Color.green.opacity(0.4))
+                    .frame(width: width + 10, height: 36)
+                    .blur(radius: 8)
+            }
+            
             // Main block
             RoundedRectangle(cornerRadius: 8)
                 .fill(type.color)
                 .frame(width: width, height: 28)
                 .overlay(
                     RoundedRectangle(cornerRadius: 8)
-                        .stroke(Color.black.opacity(0.4), lineWidth: 2)
+                        .stroke(type == .moving ? Color.cyan : (type == .slippery ? Color.green : Color.black.opacity(0.4)), lineWidth: type == .normal ? 2 : 3)
                 )
+            
+            // Moving platform arrows
+            if type == .moving {
+                HStack {
+                    Image(systemName: "arrow.left")
+                        .font(.system(size: 10, weight: .bold))
+                        .foregroundColor(.white)
+                    Spacer()
+                    Image(systemName: "arrow.right")
+                        .font(.system(size: 10, weight: .bold))
+                        .foregroundColor(.white)
+                }
+                .frame(width: width - 16)
+            }
+            
+            // Slippery platform ice crystals
+            if type == .slippery {
+                HStack(spacing: 8) {
+                    Image(systemName: "snowflake")
+                        .font(.system(size: 10))
+                        .foregroundColor(.white.opacity(0.8))
+                    Image(systemName: "snowflake")
+                        .font(.system(size: 10))
+                        .foregroundColor(.white.opacity(0.8))
+                }
+            }
             
             // Breaking countdown bar at bottom of platform
             if type == .breaking && breakingProgress > 0 {
@@ -144,7 +184,7 @@ struct PlatformView: View {
                     Spacer()
                     GeometryReader { geo in
                         Rectangle()
-                            .fill(Color.red)
+                            .fill(Color.yellow)
                             .frame(width: geo.size.width * (1 - breakingProgress), height: 4)
                             .animation(.linear(duration: 0.1), value: breakingProgress)
                     }
@@ -160,18 +200,20 @@ struct PlatformView: View {
             // Pulsing warning for breaking platform about to collapse
             if type == .breaking && breakingProgress > 0.7 {
                 RoundedRectangle(cornerRadius: 8)
-                    .stroke(Color.red, lineWidth: 3)
+                    .stroke(Color.yellow, lineWidth: 3)
                     .frame(width: width, height: 28)
                     .opacity(breakingProgress > 0.9 ? 1 : 0.6)
             }
             
-            // Visual details
-            HStack {
-                Circle().fill(Color.black.opacity(0.2)).frame(width: 5, height: 5)
-                Spacer()
-                Circle().fill(Color.black.opacity(0.2)).frame(width: 5, height: 5)
+            // Visual details for normal platform only
+            if type == .normal {
+                HStack {
+                    Circle().fill(Color.black.opacity(0.2)).frame(width: 5, height: 5)
+                    Spacer()
+                    Circle().fill(Color.black.opacity(0.2)).frame(width: 5, height: 5)
+                }
+                .padding(.horizontal, 10)
             }
-            .padding(.horizontal, 10)
         }
         .shadow(color: Color.black.opacity(0.5), radius: 5, y: 5)
     }

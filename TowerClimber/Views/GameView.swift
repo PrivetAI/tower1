@@ -219,12 +219,21 @@ struct GameView: View {
             
             // Animate moving platform (TARGET platform moves side-to-side)
             if self.currentPlatformType == .moving {
-                let movingSpeed: CGFloat = 60.0 // faster pixels per second
-                let maxOffset: CGFloat = 50.0 // wider range
+                let movingSpeed: CGFloat = 80.0 // fast pixels per second
+                let maxOffset: CGFloat = 60.0 // wide range
                 self.movingPlatformOffset += self.movingPlatformDirection * movingSpeed * 0.016
                 if abs(self.movingPlatformOffset) >= maxOffset {
                     self.movingPlatformDirection *= -1
-                    self.movingPlatformOffset = self.movingPlatformDirection > 0 ? -maxOffset : maxOffset
+                }
+            }
+            
+            // Animate slippery platform with subtle wobble
+            if self.currentPlatformType == .slippery {
+                let wobbleSpeed: CGFloat = 100.0
+                let maxWobble: CGFloat = 20.0
+                self.movingPlatformOffset += self.movingPlatformDirection * wobbleSpeed * 0.016
+                if abs(self.movingPlatformOffset) >= maxWobble {
+                    self.movingPlatformDirection *= -1
                 }
             }
         }
@@ -355,7 +364,12 @@ struct GameView: View {
         breakingProgress = 0.0
         movingPlatformOffset = 0.0
         movingPlatformDirection = 1.0
-        startCountdown()
+        currentPosition = 0.5
+        scrollOffset = 0
+        playerYOffset = 0
+        // Start game immediately without countdown
+        showCountdown = false
+        startLoop()
     }
     
     private func startBreakingAnimation() {
