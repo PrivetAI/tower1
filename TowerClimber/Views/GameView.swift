@@ -175,7 +175,7 @@ struct GameView: View {
             isTarget: false
         ))
         
-        // Platform 1: Target (above) - ALWAYS starts at 0.0
+        // Platform 1: Target (above) - starts at 0.0, will move left-right
         platforms.append(Platform(
             xPosition: 0.0,
             yPosition: playerY - platformSpacing + 20,
@@ -183,9 +183,9 @@ struct GameView: View {
             isTarget: true
         ))
         
-        // Platform 2: Next - ALWAYS starts at 0.0
+        // Platform 2: Next - center (will become target after first jump)
         platforms.append(Platform(
-            xPosition: 0.0,
+            xPosition: 0.5,
             yPosition: playerY - platformSpacing * 2 + 20,
             type: PlatformType.random(for: gameState.currentFloor + 1),
             isTarget: false
@@ -287,13 +287,21 @@ struct GameView: View {
                 }
                 
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                    // CRITICAL: Save the landing position to the platform we just landed on
+                    // This must happen BEFORE we change isTarget flags!
+                    // The platform at currentPlatformIndex+1 (current target) is where we landed
+                    let landingPosition = self.targetPosition // Where the indicator was when we jumped
+                    if self.currentPlatformIndex + 1 < self.platforms.count {
+                        self.platforms[self.currentPlatformIndex + 1].xPosition = landingPosition
+                    }
+                    
                     // Move to next platform
                     self.currentPlatformIndex += 1
                     
-                    // Add new platform at top - ALWAYS start at 0.0 (consistent!)
+                    // Add new platform at top - start at 0.5 (center)
                     let newYPosition = self.platforms.last!.yPosition - self.platformSpacing
                     self.platforms.append(Platform(
-                        xPosition: 0.0, // Always start at left edge
+                        xPosition: 0.5, // Center position
                         yPosition: newYPosition,
                         type: PlatformType.random(for: self.gameState.currentFloor + 1),
                         isTarget: false
@@ -310,26 +318,21 @@ struct GameView: View {
                         platform.yPosition + self.worldOffset > self.viewHeight + 100
                     }
                     
-                    // CRITICAL: Adjust index after removal!
+                    // Adjust index after removal
                     self.currentPlatformIndex = max(0, self.currentPlatformIndex - removedCount)
                     
-                    // Update target flags with CORRECTED index
+                    // Update target flags with corrected index
                     for i in 0..<self.platforms.count {
                         self.platforms[i].isTarget = (i == self.currentPlatformIndex + 1)
                     }
                     
-                    // Reset indicator - ALWAYS start at 0.0 to match platform position
+                    // Reset indicator to start at 0.0
                     self.targetPosition = 0.0
                     self.isMovingRight = true
-                    
-                    // Sync target platform (should already be at 0.0, but just in case)
-                    if self.currentPlatformIndex + 1 < self.platforms.count {
-                        self.platforms[self.currentPlatformIndex + 1].xPosition = self.targetPosition
-                    }
                     self.hasPressed = false
                     self.isJumping = false
                     
-                    // Check if standing on breaking platform - use INDEX not position
+                    // Check if standing on breaking platform
                     if self.currentPlatformIndex < self.platforms.count {
                         if self.platforms[self.currentPlatformIndex].type == .breaking {
                             self.startBreakingTimer()
