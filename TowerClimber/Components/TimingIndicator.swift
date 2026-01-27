@@ -84,28 +84,29 @@ struct TowerClimbView: View {
                 
                 // --- MOVING ELEMENTS ---
                 
-                // 1. Current Platform (Bottom)
+                // 1. Current Platform (Bottom) - moves if standing on moving platform
+                let currentPlatformXOffset = (currentPlatformType == .moving) ? movingPlatformOffset : 0
                 PlatformView(width: platformWidth, type: currentPlatformType, breakingProgress: breakingProgress)
                     .position(
-                        x: calculateX(for: currentPosition, width: width, platformWidth: platformWidth),
+                        x: calculateX(for: currentPosition, width: width, platformWidth: platformWidth) + currentPlatformXOffset,
                         y: height * 0.75 + scrollOffset
                     )
                 
-                // 2. Target Platform (Top) - with moving offset for moving/slippery types
+                // 2. Target Platform (Top) - static, no offset
                 PlatformView(width: platformWidth, type: targetPlatformType)
                     .position(
-                        x: calculateX(for: targetPosition, width: width, platformWidth: platformWidth) + ((targetPlatformType == .moving || targetPlatformType == .slippery) ? movingPlatformOffset : 0),
+                        x: calculateX(for: targetPosition, width: width, platformWidth: platformWidth),
                         y: height * 0.35 + scrollOffset
                     )
                 
-                // 3. Player
+                // 3. Player - moves with platform (moving) or slides independently (slippery)
+                let playerXOffset: CGFloat = movingPlatformOffset // Both cases move player
                 Image("climber")
                     .resizable()
                     .scaledToFit()
-                    .frame(width: playerSize * 1.3, height: playerSize * 1.3) // Smaller size (was 1.6)
+                    .frame(width: playerSize * 1.3, height: playerSize * 1.3)
                     .shadow(color: Color.black.opacity(0.4), radius: 6, y: 4)
-                    // Position ON the platform (offset up by 0.9 * playerSize)
-                    .position(x: width / 2, y: height * 0.75 - playerSize * 0.9 + playerYOffset + scrollOffset)
+                    .position(x: width / 2 + playerXOffset, y: height * 0.75 - playerSize * 0.9 + playerYOffset + scrollOffset)
                     
             }
             .clipped()

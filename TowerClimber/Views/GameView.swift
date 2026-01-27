@@ -217,24 +217,30 @@ struct GameView: View {
                 }
             }
             
-            // Animate moving platform (TARGET platform moves side-to-side)
-            if self.currentPlatformType == .moving {
-                let movingSpeed: CGFloat = 80.0 // fast pixels per second
-                let maxOffset: CGFloat = 60.0 // wide range
+            // Animate CURRENT platform when standing on special types
+            // Blue (moving) - the platform itself moves with the player on it
+            if self.standingOnPlatformType == .moving {
+                let movingSpeed: CGFloat = 50.0 // pixels per second
+                let maxOffset: CGFloat = 40.0
                 self.movingPlatformOffset += self.movingPlatformDirection * movingSpeed * 0.016
                 if abs(self.movingPlatformOffset) >= maxOffset {
                     self.movingPlatformDirection *= -1
                 }
             }
             
-            // Animate slippery platform with subtle wobble
-            if self.currentPlatformType == .slippery {
-                let wobbleSpeed: CGFloat = 100.0
-                let maxWobble: CGFloat = 20.0
-                self.movingPlatformOffset += self.movingPlatformDirection * wobbleSpeed * 0.016
-                if abs(self.movingPlatformOffset) >= maxWobble {
+            // Green (slippery) - the player slides on the platform
+            if self.standingOnPlatformType == .slippery {
+                let slideSpeed: CGFloat = 80.0
+                let maxSlide: CGFloat = 30.0
+                self.movingPlatformOffset += self.movingPlatformDirection * slideSpeed * 0.016
+                if abs(self.movingPlatformOffset) >= maxSlide {
                     self.movingPlatformDirection *= -1
                 }
+            }
+            
+            // Reset offset if on normal/breaking platform
+            if self.standingOnPlatformType == .normal || self.standingOnPlatformType == .breaking {
+                self.movingPlatformOffset = 0
             }
         }
     }
