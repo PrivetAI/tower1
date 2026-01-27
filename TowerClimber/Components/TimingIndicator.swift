@@ -292,11 +292,15 @@ struct TowerBackground: View {
     ZStack {
         AppColors.background.ignoresSafeArea()
         TowerClimbView(
-            targetPosition: 0.8,
-            currentPosition: 0.5,
-            scrollOffset: 0,
-            isJumping: false,
-            playerYOffset: 0
+            platforms: [
+                Platform(xPosition: 0.5, yPosition: 290, type: .normal),
+                Platform(xPosition: 0.7, yPosition: 150, type: .moving, isTarget: true),
+                Platform(xPosition: 0.3, yPosition: 10, type: .normal)
+            ],
+            worldOffset: 0,
+            playerYOffset: 0,
+            playerXOffset: 0,
+            breakingProgress: 0
         )
         .frame(height: 400)
     }
