@@ -22,6 +22,7 @@ struct GameView: View {
     @State private var isMovingRight = true
     @State private var gameTimer: Timer?
     @State private var breakingProgress: CGFloat = 0.0
+    @State private var playerStandingX: CGFloat = 0.5 // X position where player is standing
     
     // UI State
     @State private var gameResult: GameResult?
@@ -116,7 +117,7 @@ struct GameView: View {
                         playerXOffset: playerXOffset,
                         breakingProgress: breakingProgress,
                         targetPosition: targetPosition,
-                        currentPlatformXPosition: currentPlatformIndex < platforms.count ? platforms[currentPlatformIndex].xPosition : 0.5,
+                        currentPlatformXPosition: playerStandingX,
                         currentPlatformId: currentPlatformIndex < platforms.count ? platforms[currentPlatformIndex].id : nil,
                         theme: themeManager.currentTheme
                     )
@@ -288,10 +289,12 @@ struct GameView: View {
                 }
                 
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                    // Save landing position - platform stays where it was when player landed
-                    // Player will render at same X position
+                    // Save landing position
+                    let landingX = self.targetPosition
+                    self.playerStandingX = landingX // Player stands where they landed
+                    
                     if self.currentPlatformIndex + 1 < self.platforms.count {
-                        self.platforms[self.currentPlatformIndex + 1].xPosition = self.targetPosition
+                        self.platforms[self.currentPlatformIndex + 1].xPosition = landingX
                     }
                     
                     // Move to next platform
