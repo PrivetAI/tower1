@@ -161,26 +161,25 @@ struct GameView: View {
         platforms = []
         let playerY: CGFloat = viewHeight * 0.65
         
-        // Create initial platforms
-        // Platform 0: Current (where player stands)
+        // Platform 0: Current (where player stands) - center
         platforms.append(Platform(
             xPosition: 0.5,
-            yPosition: playerY + 20, // Slightly below player
+            yPosition: playerY + 20,
             type: .normal,
             isTarget: false
         ))
         
-        // Platform 1: Target (above)
+        // Platform 1: Target (above) - starts at edge so it moves
         platforms.append(Platform(
-            xPosition: 0.2, // Start position for indicator
+            xPosition: 0.0, // Start at left edge
             yPosition: playerY - platformSpacing + 20,
             type: .normal,
             isTarget: true
         ))
         
-        // Platform 2: Next (for seamless look)
+        // Platform 2: Next - starts at edge
         platforms.append(Platform(
-            xPosition: CGFloat.random(in: 0.2...0.8),
+            xPosition: 1.0, // Start at right edge
             yPosition: playerY - platformSpacing * 2 + 20,
             type: PlatformType.random(for: gameState.currentFloor + 1),
             isTarget: false
@@ -188,6 +187,8 @@ struct GameView: View {
         
         currentPlatformIndex = 0
         worldOffset = 0
+        targetPosition = 0.0
+        isMovingRight = true
     }
     
     private func startCountdown() {
@@ -287,10 +288,11 @@ struct GameView: View {
                     // Move to next platform
                     self.currentPlatformIndex += 1
                     
-                    // Add new platform at top
+                    // Add new platform at top - start at opposite edge
                     let newY = self.platforms.last!.yPosition - self.platformSpacing
+                    let startEdge: CGFloat = Bool.random() ? 0.0 : 1.0
                     self.platforms.append(Platform(
-                        xPosition: CGFloat.random(in: 0.1...0.9),
+                        xPosition: startEdge,
                         yPosition: newY,
                         type: PlatformType.random(for: self.gameState.currentFloor + 1),
                         isTarget: false
@@ -306,11 +308,18 @@ struct GameView: View {
                         platform.yPosition + self.worldOffset > self.viewHeight + 100
                     }
                     
-                    // Reset for next jump
+                    // Reset indicator for next jump - start at edge
                     self.targetPosition = Bool.random() ? 0.0 : 1.0
                     self.isMovingRight = self.targetPosition < 0.5
                     self.hasPressed = false
                     self.isJumping = false
+                    
+                    // Check if standing on breaking platform
+                    if let currentPlatform = self.platforms.first(where: { $0.yPosition + self.worldOffset > self.viewHeight * 0.6 && $0.yPosition + self.worldOffset < self.viewHeight * 0.7 }) {
+                        if currentPlatform.type == .breaking {
+                            self.startBreakingTimer()
+                        }
+                    }
                     
                     self.startLoop()
                 }
@@ -377,6 +386,43 @@ struct GameView: View {
             totalGames: statisticsManager.stats.totalGames
         )
         gameState.saveProgress()
+    }
+    
+    private func startBreakingTimer() {
+        breakingProgress = 0.0
+        
+        // 2 second breaking timer
+        let startTime = Date()
+        let duration: TimeInterval = 2.0
+        
+        Timer.scheduledTimer(withTimeInterval: 0.05, repeats: true) { timer in
+            let elapsed = Date().timeIntervalSince(startTime)
+            self.breakingProgress = CGFloat(elapsed / duration)
+            
+            // If player jumped away, stop timer
+            if self.isJumping || self.hasPressed {
+                timer.invalidate()
+                return
+            }
+            
+            // Platform breaks - game over
+            if elapsed >= duration {
+                timer.invalidate()
+                self.breakingProgress = 1.0
+                
+                // Fall to death
+                SoundManager.shared.playMiss()
+                withAnimation(.easeIn(duration: 0.5)) {
+                    self.playerYOffset = 500
+                }
+                
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                    self.autoSaveProgress()
+                    self.gameResult = .tryAgain
+                    self.showResult = true
+                }
+            }
+        }
     }
 }
 
