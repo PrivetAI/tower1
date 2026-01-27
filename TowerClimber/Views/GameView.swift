@@ -116,6 +116,7 @@ struct GameView: View {
                         playerXOffset: playerXOffset,
                         breakingProgress: breakingProgress,
                         targetPosition: targetPosition,
+                        currentPlatformXPosition: currentPlatformIndex < platforms.count ? platforms[currentPlatformIndex].xPosition : 0.5,
                         currentPlatformId: currentPlatformIndex < platforms.count ? platforms[currentPlatformIndex].id : nil,
                         theme: themeManager.currentTheme
                     )
@@ -287,10 +288,10 @@ struct GameView: View {
                 }
                 
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                    // Set the platform we landed on to CENTER (0.5)
-                    // Player is always rendered at center, so platform must be there too
+                    // Save landing position - platform stays where it was when player landed
+                    // Player will render at same X position
                     if self.currentPlatformIndex + 1 < self.platforms.count {
-                        self.platforms[self.currentPlatformIndex + 1].xPosition = 0.5
+                        self.platforms[self.currentPlatformIndex + 1].xPosition = self.targetPosition
                     }
                     
                     // Move to next platform

@@ -61,7 +61,8 @@ struct TowerClimbView: View {
     let playerYOffset: CGFloat
     let playerXOffset: CGFloat
     let breakingProgress: CGFloat
-    let targetPosition: CGFloat // Indicator position for target platform (0.0 to 1.0)
+    let targetPosition: CGFloat
+    let currentPlatformXPosition: CGFloat // X position of platform player stands on (0.0 to 1.0)
     var currentPlatformId: UUID? = nil
     var theme: TowerTheme = TowerTheme.allThemes[0]
     
@@ -110,14 +111,15 @@ struct TowerClimbView: View {
                     }
                 }
                 
-                // Player - always at fixed screen position, moves with world
+                // Player - positioned at current platform X
                 let playerScreenY = height * 0.65 + playerYOffset
+                let playerX = calculateX(for: currentPlatformXPosition, width: width, platformWidth: platformWidth)
                 Image("climber")
                     .resizable()
                     .scaledToFit()
                     .frame(width: playerSize * 1.3, height: playerSize * 1.3)
                     .shadow(color: Color.black.opacity(0.4), radius: 6, y: 4)
-                    .position(x: width / 2 + playerXOffset, y: playerScreenY)
+                    .position(x: playerX + playerXOffset, y: playerScreenY)
             }
             .clipped()
         }
@@ -308,7 +310,8 @@ struct TowerBackground: View {
             playerYOffset: 0,
             playerXOffset: 0,
             breakingProgress: 0,
-            targetPosition: 0.7
+            targetPosition: 0.7,
+            currentPlatformXPosition: 0.5
         )
         .frame(height: 400)
     }
