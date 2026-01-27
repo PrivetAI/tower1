@@ -57,10 +57,11 @@ struct Platform: Identifiable {
 struct TowerClimbView: View {
     // Scrolling system
     let platforms: [Platform]
-    let worldOffset: CGFloat // How much the world has scrolled down
-    let playerYOffset: CGFloat // Player jump animation offset
-    let playerXOffset: CGFloat // Player horizontal position (for platform movement)
+    let worldOffset: CGFloat
+    let playerYOffset: CGFloat
+    let playerXOffset: CGFloat
     let breakingProgress: CGFloat
+    var currentPlatformId: UUID? = nil // Platform player is standing on
     var theme: TowerTheme = TowerTheme.allThemes[0]
     
     var body: some View {
@@ -91,10 +92,12 @@ struct TowerClimbView: View {
                     let screenY = platform.yPosition + worldOffset
                     // Only render if on screen
                     if screenY > -50 && screenY < height + 50 {
+                        // Breaking progress only for platform player is standing on
+                        let platformBreakingProgress = (platform.id == currentPlatformId && platform.type == .breaking) ? breakingProgress : 0
                         PlatformView(
                             width: platformWidth,
                             type: platform.type,
-                            breakingProgress: platform.isTarget ? 0 : breakingProgress
+                            breakingProgress: platformBreakingProgress
                         )
                         .position(
                             x: calculateX(for: platform.xPosition, width: width, platformWidth: platformWidth),

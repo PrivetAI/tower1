@@ -111,6 +111,7 @@ struct GameView: View {
                         playerYOffset: playerYOffset,
                         playerXOffset: playerXOffset,
                         breakingProgress: breakingProgress,
+                        currentPlatformId: currentPlatformIndex < platforms.count ? platforms[currentPlatformIndex].id : nil,
                         theme: themeManager.currentTheme
                     )
                     .frame(height: viewHeight)
