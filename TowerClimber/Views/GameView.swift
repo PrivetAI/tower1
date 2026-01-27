@@ -290,34 +290,48 @@ struct GameView: View {
                     self.currentPlatformIndex += 1
                     
                     // Add new platform at top - start at opposite edge
-                    let newY = self.platforms.last!.yPosition - self.platformSpacing
+                    let newYPosition = self.platforms.last!.yPosition - self.platformSpacing
                     let startEdge: CGFloat = Bool.random() ? 0.0 : 1.0
                     self.platforms.append(Platform(
                         xPosition: startEdge,
-                        yPosition: newY,
+                        yPosition: newYPosition,
                         type: PlatformType.random(for: self.gameState.currentFloor + 1),
                         isTarget: false
                     ))
                     
-                    // Update target flags
-                    for i in 0..<self.platforms.count {
-                        self.platforms[i].isTarget = (i == self.currentPlatformIndex + 1)
+                    // Count platforms to be removed BEFORE removal
+                    let platformsToRemove = self.platforms.filter { platform in
+                        platform.yPosition + self.worldOffset > self.viewHeight + 100
                     }
+                    let removedCount = platformsToRemove.count
                     
                     // Remove old platforms that are off screen
                     self.platforms.removeAll { platform in
                         platform.yPosition + self.worldOffset > self.viewHeight + 100
                     }
                     
-                    // Reset indicator for next jump - start at edge
+                    // CRITICAL: Adjust index after removal!
+                    self.currentPlatformIndex = max(0, self.currentPlatformIndex - removedCount)
+                    
+                    // Update target flags with CORRECTED index
+                    for i in 0..<self.platforms.count {
+                        self.platforms[i].isTarget = (i == self.currentPlatformIndex + 1)
+                    }
+                    
+                    // Sync target platform position with targetPosition
+                    if self.currentPlatformIndex + 1 < self.platforms.count {
+                        self.platforms[self.currentPlatformIndex + 1].xPosition = self.targetPosition
+                    }
+                    
+                    // Reset indicator - start at edge
                     self.targetPosition = Bool.random() ? 0.0 : 1.0
                     self.isMovingRight = self.targetPosition < 0.5
                     self.hasPressed = false
                     self.isJumping = false
                     
-                    // Check if standing on breaking platform
-                    if let currentPlatform = self.platforms.first(where: { $0.yPosition + self.worldOffset > self.viewHeight * 0.6 && $0.yPosition + self.worldOffset < self.viewHeight * 0.7 }) {
-                        if currentPlatform.type == .breaking {
+                    // Check if standing on breaking platform - use INDEX not position
+                    if self.currentPlatformIndex < self.platforms.count {
+                        if self.platforms[self.currentPlatformIndex].type == .breaking {
                             self.startBreakingTimer()
                         }
                     }
