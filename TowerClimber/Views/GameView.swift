@@ -23,6 +23,7 @@ struct GameView: View {
     @State private var gameTimer: Timer?
     @State private var breakingProgress: CGFloat = 0.0
     @State private var playerStandingX: CGFloat = 0.5 // X position where player is standing
+    @State private var jumpLandingX: CGFloat = 0.5 // Fixed X position at moment of jump
     
     // UI State
     @State private var gameResult: GameResult?
@@ -118,6 +119,8 @@ struct GameView: View {
                         breakingProgress: breakingProgress,
                         targetPosition: targetPosition,
                         currentPlatformXPosition: playerStandingX,
+                        isJumping: isJumping,
+                        jumpLandingX: jumpLandingX,
                         currentPlatformId: currentPlatformIndex < platforms.count ? platforms[currentPlatformIndex].id : nil,
                         theme: themeManager.currentTheme
                     )
@@ -256,6 +259,7 @@ struct GameView: View {
         
         hasPressed = true
         isJumping = true
+        jumpLandingX = targetPosition // Fix landing position at tap moment
         
         if isSuccess {
             SoundManager.shared.playTap()
@@ -289,12 +293,11 @@ struct GameView: View {
                 }
                 
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                    // Save landing position
-                    let landingX = self.targetPosition
-                    self.playerStandingX = landingX // Player stands where they landed
+                    // Use fixed landing position from tap moment
+                    self.playerStandingX = self.jumpLandingX
                     
                     if self.currentPlatformIndex + 1 < self.platforms.count {
-                        self.platforms[self.currentPlatformIndex + 1].xPosition = landingX
+                        self.platforms[self.currentPlatformIndex + 1].xPosition = self.jumpLandingX
                     }
                     
                     // Move to next platform

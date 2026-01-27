@@ -63,6 +63,8 @@ struct TowerClimbView: View {
     let breakingProgress: CGFloat
     let targetPosition: CGFloat
     let currentPlatformXPosition: CGFloat // X position of platform player stands on (0.0 to 1.0)
+    var isJumping: Bool = false
+    var jumpLandingX: CGFloat = 0.5
     var currentPlatformId: UUID? = nil
     var theme: TowerTheme = TowerTheme.allThemes[0]
     
@@ -96,8 +98,8 @@ struct TowerClimbView: View {
                     if screenY > -50 && screenY < height + 50 {
                         let platformBreakingProgress = (platform.id == currentPlatformId && platform.type == .breaking) ? breakingProgress : 0
                         
-                        // Target platform uses targetPosition directly (not stored xPosition)
-                        let xPos = platform.isTarget ? targetPosition : platform.xPosition
+                        // Target platform uses fixed position when jumping, otherwise targetPosition
+                        let xPos = platform.isTarget ? (isJumping ? jumpLandingX : targetPosition) : platform.xPosition
                         
                         PlatformView(
                             width: platformWidth,
