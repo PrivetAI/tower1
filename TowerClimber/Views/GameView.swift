@@ -305,8 +305,9 @@ struct GameView: View {
                 }
                 
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                    // Move to next platform
-                    self.currentPlatformIndex += 1
+                    // Save ID of target platform (where player will land)
+                    let targetPlatformId = self.currentPlatformIndex + 1 < self.platforms.count ? 
+                        self.platforms[self.currentPlatformIndex + 1].id : nil
                     
                     // Add new platform at top - start at 0.5 (center)
                     let newYPosition = self.platforms.last!.yPosition - self.platformSpacing
@@ -317,19 +318,19 @@ struct GameView: View {
                         isTarget: false
                     ))
                     
-                    // Count platforms to be removed BEFORE removal
-                    let platformsToRemove = self.platforms.filter { platform in
-                        platform.yPosition + self.worldOffset > self.viewHeight + 100
-                    }
-                    let removedCount = platformsToRemove.count
-                    
                     // Remove old platforms that are off screen
                     self.platforms.removeAll { platform in
                         platform.yPosition + self.worldOffset > self.viewHeight + 100
                     }
                     
-                    // Adjust index after removal
-                    self.currentPlatformIndex = max(0, self.currentPlatformIndex - removedCount)
+                    // Find platform by ID and set correct index
+                    if let targetId = targetPlatformId,
+                       let targetIndex = self.platforms.firstIndex(where: { $0.id == targetId }) {
+                        self.currentPlatformIndex = targetIndex
+                    } else {
+                        // Fallback: assume first platform
+                        self.currentPlatformIndex = 0
+                    }
                     
                     // Update target flags with corrected index
                     for i in 0..<self.platforms.count {

@@ -50,10 +50,3 @@ Challenge yourself to reach new heights!
 - **Language:** English (UK)
 - **Framework:** SwiftUI
 
-## Screenshots Needed
-
-1. Gameplay - jumping between platforms
-2. Landing on platform
-3. Achievements screen
-4. Themes screen
-5. Statistics/History screen
