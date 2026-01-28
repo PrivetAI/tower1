@@ -11,10 +11,17 @@
 		A1000002207E0002 /* GameState.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000002207E0001 /* GameState.swift */; };
 		A1000003207E0003 /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000003207E0002 /* Constants.swift */; };
 		A1000004207E0004 /* SplashView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000004207E0003 /* SplashView.swift */; };
-		A1000005207E0005 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000005207E0004 /* HomeView.swift */; };
 		A100000A207E000A /* TowerAnimation.swift in Sources */ = {isa = PBXBuildFile; fileRef = A100000A207E0009 /* TowerAnimation.swift */; };
 		A100000B207E000B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A100000B207E000A /* Assets.xcassets */; };
 		A1000022207E0022 /* SoundManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000021207E0021A /* SoundManager.swift */; };
+		A1000030207E0030 /* Upgrade.swift in Sources */ = {isa = PBXBuildFile; fileRef = A100002F207E002F /* Upgrade.swift */; };
+		A1000031207E0031 /* Milestone.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000030207E0030A /* Milestone.swift */; };
+		A1000032207E0032 /* GameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000031207E0031A /* GameView.swift */; };
+		A1000033207E0033 /* UpgradesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000032207E0032A /* UpgradesView.swift */; };
+		A1000034207E0034 /* MilestonesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000033207E0033A /* MilestonesView.swift */; };
+		A1000035207E0035 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000034207E0034A /* SettingsView.swift */; };
+		A1000036207E0036 /* MainTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000035207E0035A /* MainTabView.swift */; };
+		A1000037207E0037 /* SquirrelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000036207E0036A /* SquirrelView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -22,11 +29,18 @@
 		A1000002207E0001 /* GameState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameState.swift; sourceTree = "<group>"; };
 		A1000003207E0002 /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
 		A1000004207E0003 /* SplashView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplashView.swift; sourceTree = "<group>"; };
-		A1000005207E0004 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
 		A100000A207E0009 /* TowerAnimation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TowerAnimation.swift; sourceTree = "<group>"; };
 		A100000B207E000A /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		A100000C207E000B /* TowerClimber.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TowerClimber.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A1000021207E0021A /* SoundManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundManager.swift; sourceTree = "<group>"; };
+		A100002F207E002F /* Upgrade.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Upgrade.swift; sourceTree = "<group>"; };
+		A1000030207E0030A /* Milestone.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Milestone.swift; sourceTree = "<group>"; };
+		A1000031207E0031A /* GameView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameView.swift; sourceTree = "<group>"; };
+		A1000032207E0032A /* UpgradesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpgradesView.swift; sourceTree = "<group>"; };
+		A1000033207E0033A /* MilestonesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MilestonesView.swift; sourceTree = "<group>"; };
+		A1000034207E0034A /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		A1000035207E0035A /* MainTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainTabView.swift; sourceTree = "<group>"; };
+		A1000036207E0036A /* SquirrelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SquirrelView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -58,6 +72,8 @@
 			children = (
 				A1000002207E0001 /* GameState.swift */,
 				A1000021207E0021A /* SoundManager.swift */,
+				A100002F207E002F /* Upgrade.swift */,
+				A1000030207E0030A /* Milestone.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -66,7 +82,11 @@
 			isa = PBXGroup;
 			children = (
 				A1000004207E0003 /* SplashView.swift */,
-				A1000005207E0004 /* HomeView.swift */,
+				A1000031207E0031A /* GameView.swift */,
+				A1000032207E0032A /* UpgradesView.swift */,
+				A1000033207E0033A /* MilestonesView.swift */,
+				A1000034207E0034A /* SettingsView.swift */,
+				A1000035207E0035A /* MainTabView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -75,6 +95,7 @@
 			isa = PBXGroup;
 			children = (
 				A100000A207E0009 /* TowerAnimation.swift */,
+				A1000036207E0036A /* SquirrelView.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -176,9 +197,16 @@
 				A1000002207E0002 /* GameState.swift in Sources */,
 				A1000003207E0003 /* Constants.swift in Sources */,
 				A1000004207E0004 /* SplashView.swift in Sources */,
-				A1000005207E0005 /* HomeView.swift in Sources */,
 				A100000A207E000A /* TowerAnimation.swift in Sources */,
 				A1000022207E0022 /* SoundManager.swift in Sources */,
+				A1000030207E0030 /* Upgrade.swift in Sources */,
+				A1000031207E0031 /* Milestone.swift in Sources */,
+				A1000032207E0032 /* GameView.swift in Sources */,
+				A1000033207E0033 /* UpgradesView.swift in Sources */,
+				A1000034207E0034 /* MilestonesView.swift in Sources */,
+				A1000035207E0035 /* SettingsView.swift in Sources */,
+				A1000036207E0036 /* MainTabView.swift in Sources */,
+				A1000037207E0037 /* SquirrelView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

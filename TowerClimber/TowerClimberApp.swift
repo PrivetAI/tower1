@@ -14,7 +14,7 @@ struct TowerClimberApp: App {
                     SplashView(showSplash: $showSplash)
                         .transition(.opacity)
                 } else {
-                    HomeView()
+                    MainTabView()
                         .transition(.opacity)
                 }
             }
