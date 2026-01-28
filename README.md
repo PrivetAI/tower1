@@ -1,52 +1,48 @@
-# Tower Climber
+# Tower Climber 🏗️
 
-A timing-based arcade game where you help a squirrel climb an endless tower by jumping from platform to platform.
+Idle clicker game для iOS. Строй башню, покупай апгрейды, достигай целей!
 
-## App Store Description
+## Особенности
 
-**Title:** Tower Climber - Endless Jump
+- **Кликер механика** — тапай кнопку, поднимайся выше
+- **14 апгрейдов** — увеличивай силу тапа, авто-подъём, множители
+- **20 целей** — от 10 до 100,000 этажей
+- **Адаптивный UI** — оптимизирован для iPhone и iPad
+- **Сохранение прогресса** — автосохранение в UserDefaults
 
-**Subtitle:** Time your jumps, climb the tower!
+## Требования
 
-**Description:**
+- iOS 15.0+
+- Xcode 15+
+- Swift 5
 
-Test your reflexes in this addictive timing-based arcade game!
+## Структура
 
-Help a brave squirrel climb an endless tower by perfectly timing your jumps. Watch the moving platform indicator and tap at the right moment to land safely. Miss the timing and fall!
+```
+TowerClimber/
+├── Models/
+│   ├── GameState.swift    # Логика игры, сохранение
+│   ├── Upgrade.swift      # 14 апгрейдов
+│   ├── Milestone.swift    # 20 целей
+│   └── SoundManager.swift # Звуки и хаптика
+├── Views/
+│   ├── GameView.swift     # Главный экран с башней
+│   ├── UpgradesView.swift # Магазин апгрейдов
+│   ├── MilestonesView.swift # Цели
+│   └── SettingsView.swift # Статистика и настройки
+├── Components/
+│   ├── Shapes.swift       # Triangle, Star
+│   └── UpgradeIcons.swift # Кастомные иконки
+└── Utilities/
+    └── Constants.swift    # Цвета, шрифты
+```
 
-**Features:**
-• Simple one-tap gameplay - easy to learn, hard to master
-• Endless climbing - how high can you go?
-• Multiple platform types: normal, moving, and breaking platforms
-• Unlock beautiful themes as you progress
-• 28 achievements to unlock
-• Track your statistics and climb history
-• Smooth animations and satisfying feedback
-• Universal app - plays great on iPhone and iPad
+## Запуск
 
-**How to Play:**
-1. Watch the platform move left and right
-2. Tap JUMP when the platform is centered
-3. Land successfully to climb higher
-4. Build combos for bonus points
-5. Avoid breaking platforms - they crumble fast!
+1. Открыть `TowerClimber.xcodeproj` в Xcode
+2. Выбрать симулятор или устройство
+3. Cmd+R
 
-Challenge yourself to reach new heights!
+## Лицензия
 
----
-
-**Keywords:** arcade, timing, jump, endless, tower, climb, reflex, casual, game, squirrel
-
-**Category:** Games > Arcade
-
-**Age Rating:** 4+
-
-**Privacy:** This app does not collect any personal data.
-
-## Technical Info
-
-- **Platform:** iOS 15.6+
-- **Devices:** iPhone, iPad (Universal)
-- **Language:** English (UK)
-- **Framework:** SwiftUI
-
+MIT
