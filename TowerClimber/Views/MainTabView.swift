@@ -6,6 +6,10 @@ struct MainTabView: View {
     
     var body: some View {
         ZStack(alignment: .bottom) {
+            // Background for iPad
+            AppColors.background
+                .ignoresSafeArea()
+            
             // Tab Content
             Group {
                 switch selectedTab {
