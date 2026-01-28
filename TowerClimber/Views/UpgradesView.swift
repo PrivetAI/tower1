@@ -12,40 +12,63 @@ struct UpgradesView: View {
                 // Header
                 HStack {
                     Text("Upgrades")
-                        .font(AppFonts.title(28))
+                        .font(AppFonts.title(26))
                         .foregroundColor(.white)
                     
                     Spacer()
                     
                     // Coins
-                    HStack(spacing: 6) {
+                    HStack(spacing: 5) {
                         CoinIcon()
-                            .frame(width: 20, height: 20)
+                            .frame(width: 18, height: 18)
                         Text(formatNumber(gameState.coins))
-                            .font(AppFonts.number(18))
+                            .font(AppFonts.number(16))
                             .foregroundColor(AppColors.gold)
                     }
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 8)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 6)
                     .background(Capsule().fill(AppColors.cardBackground))
                 }
-                .padding(.horizontal, 20)
-                .padding(.top, 16)
+                .padding(.horizontal, 16)
+                .padding(.top, 12)
+                
+                // Category tabs
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 8) {
+                        CategoryPill(title: "Tap Power", color: Color(hex: "e94560"), count: tapUpgrades.count)
+                        CategoryPill(title: "Auto Climb", color: Color(hex: "4ade80"), count: autoUpgrades.count)
+                        CategoryPill(title: "Multipliers", color: Color(hex: "a855f7"), count: multiplierUpgrades.count)
+                    }
+                    .padding(.horizontal, 16)
+                }
+                .padding(.top, 12)
                 
                 ScrollView {
-                    LazyVStack(spacing: 12) {
+                    LazyVStack(spacing: 10) {
                         ForEach(gameState.upgrades) { upgrade in
                             UpgradeCard(upgrade: upgrade) {
                                 buyUpgrade(upgrade)
                             }
                         }
                     }
-                    .padding(.horizontal, 16)
-                    .padding(.top, 16)
+                    .padding(.horizontal, 14)
+                    .padding(.top, 12)
                     .padding(.bottom, 100)
                 }
             }
         }
+    }
+    
+    private var tapUpgrades: [Upgrade] {
+        gameState.upgrades.filter { if case .tapPower = $0.effect { return true }; return false }
+    }
+    
+    private var autoUpgrades: [Upgrade] {
+        gameState.upgrades.filter { if case .autoTap = $0.effect { return true }; return false }
+    }
+    
+    private var multiplierUpgrades: [Upgrade] {
+        gameState.upgrades.filter { if case .multiplier = $0.effect { return true }; return false }
     }
     
     private func buyUpgrade(_ upgrade: Upgrade) {
@@ -64,6 +87,28 @@ struct UpgradesView: View {
     }
 }
 
+// MARK: - Category Pill
+
+struct CategoryPill: View {
+    let title: String
+    let color: Color
+    let count: Int
+    
+    var body: some View {
+        HStack(spacing: 4) {
+            Circle()
+                .fill(color)
+                .frame(width: 8, height: 8)
+            Text(title)
+                .font(AppFonts.body(12))
+                .foregroundColor(.white.opacity(0.8))
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 6)
+        .background(Capsule().fill(color.opacity(0.2)))
+    }
+}
+
 // MARK: - Upgrade Card
 
 struct UpgradeCard: View {
@@ -76,41 +121,49 @@ struct UpgradeCard: View {
         gameState.coins >= upgrade.currentPrice
     }
     
+    private var categoryColor: Color {
+        switch upgrade.effect {
+        case .tapPower: return Color(hex: "e94560")
+        case .autoTap: return Color(hex: "4ade80")
+        case .multiplier: return Color(hex: "a855f7")
+        }
+    }
+    
     var body: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: 10) {
             // Icon
-            upgradeIcon
-                .frame(width: 50, height: 50)
+            UpgradeIconView(iconType: upgrade.iconType, size: 24)
+                .frame(width: 44, height: 44)
                 .background(
-                    RoundedRectangle(cornerRadius: 12)
-                        .fill(iconBackground)
+                    RoundedRectangle(cornerRadius: 10)
+                        .fill(categoryColor.opacity(0.2))
                 )
             
             // Info
-            VStack(alignment: .leading, spacing: 4) {
-                HStack {
+            VStack(alignment: .leading, spacing: 3) {
+                HStack(spacing: 6) {
                     Text(upgrade.name)
-                        .font(AppFonts.body(16))
+                        .font(AppFonts.body(15))
                         .foregroundColor(.white)
                     
                     if upgrade.level > 0 {
                         Text("Lv.\(upgrade.level)")
-                            .font(AppFonts.body(12))
-                            .foregroundColor(AppColors.gold)
-                            .padding(.horizontal, 6)
+                            .font(AppFonts.body(11))
+                            .foregroundColor(categoryColor)
+                            .padding(.horizontal, 5)
                             .padding(.vertical, 2)
-                            .background(Capsule().fill(AppColors.gold.opacity(0.2)))
+                            .background(Capsule().fill(categoryColor.opacity(0.2)))
                     }
                 }
                 
                 Text(upgrade.description)
-                    .font(AppFonts.body(12))
-                    .foregroundColor(.white.opacity(0.6))
+                    .font(AppFonts.body(11))
+                    .foregroundColor(.white.opacity(0.5))
                 
                 if upgrade.level > 0 {
-                    Text("Current: +\(Int(upgrade.effectValue))")
-                        .font(AppFonts.body(11))
-                        .foregroundColor(AppColors.success)
+                    Text("Total: +\(Int(upgrade.effectValue))")
+                        .font(AppFonts.body(10))
+                        .foregroundColor(categoryColor)
                 }
             }
             
@@ -119,61 +172,38 @@ struct UpgradeCard: View {
             // Buy Button
             if upgrade.isMaxLevel {
                 Text("MAX")
-                    .font(AppFonts.body(14))
-                    .foregroundColor(.white.opacity(0.5))
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 10)
+                    .font(AppFonts.body(12))
+                    .foregroundColor(.white.opacity(0.4))
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 8)
                     .background(
-                        RoundedRectangle(cornerRadius: 10)
-                            .fill(Color.gray.opacity(0.3))
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(Color.gray.opacity(0.2))
                     )
             } else {
                 Button(action: onBuy) {
-                    HStack(spacing: 4) {
+                    HStack(spacing: 3) {
                         CoinIcon()
-                            .frame(width: 14, height: 14)
+                            .frame(width: 12, height: 12)
                         Text(formatNumber(upgrade.currentPrice))
-                            .font(AppFonts.body(14))
+                            .font(AppFonts.body(12))
                     }
-                    .foregroundColor(canAfford ? .white : .white.opacity(0.5))
-                    .padding(.horizontal, 14)
-                    .padding(.vertical, 10)
+                    .foregroundColor(canAfford ? .white : .white.opacity(0.4))
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 8)
                     .background(
-                        RoundedRectangle(cornerRadius: 10)
-                            .fill(canAfford ? AppColors.accent : Color.gray.opacity(0.3))
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(canAfford ? categoryColor : Color.gray.opacity(0.3))
                     )
                 }
                 .disabled(!canAfford)
             }
         }
-        .padding(12)
+        .padding(10)
         .background(
-            RoundedRectangle(cornerRadius: 16)
+            RoundedRectangle(cornerRadius: 14)
                 .fill(AppColors.cardBackground)
         )
-    }
-    
-    @ViewBuilder
-    var upgradeIcon: some View {
-        switch upgrade.effect {
-        case .tapPower:
-            TapIcon()
-        case .autoTap:
-            AutoIcon()
-        case .multiplier:
-            MultiplierIcon()
-        }
-    }
-    
-    var iconBackground: Color {
-        switch upgrade.effect {
-        case .tapPower:
-            return Color(hex: "e94560").opacity(0.3)
-        case .autoTap:
-            return Color(hex: "4ade80").opacity(0.3)
-        case .multiplier:
-            return Color(hex: "ffd700").opacity(0.3)
-        }
     }
     
     private func formatNumber(_ num: Int) -> String {
@@ -183,64 +213,6 @@ struct UpgradeCard: View {
             return String(format: "%.1fK", Double(num) / 1000)
         }
         return "\(num)"
-    }
-}
-
-// MARK: - Custom Icons
-
-struct TapIcon: View {
-    var body: some View {
-        ZStack {
-            // Paw Pad
-            Circle()
-                .fill(Color(hex: "e94560"))
-                .frame(width: 16, height: 16)
-                .offset(y: 4)
-            
-            // Toes
-            HStack(spacing: 2) {
-                Circle().fill(Color(hex: "e94560")).frame(width: 8, height: 8)
-                Circle().fill(Color(hex: "e94560")).frame(width: 8, height: 8).offset(y: -4)
-                Circle().fill(Color(hex: "e94560")).frame(width: 8, height: 8)
-            }
-            .offset(y: -8)
-        }
-    }
-}
-
-struct AutoIcon: View {
-    var body: some View {
-        ZStack {
-            // Bird/Wing shape
-            Path { path in
-                path.move(to: CGPoint(x: 4, y: 14))
-                path.addQuadCurve(to: CGPoint(x: 20, y: 6), control: CGPoint(x: 12, y: 4))
-                path.addQuadCurve(to: CGPoint(x: 12, y: 20), control: CGPoint(x: 24, y: 16))
-                path.closeSubpath()
-            }
-            .fill(AppColors.success)
-            .frame(width: 24, height: 24)
-        }
-    }
-}
-
-struct MultiplierIcon: View {
-    var body: some View {
-        ZStack {
-            // Acorn shape
-            Ellipse()
-                .fill(Color(hex: "d4a574"))
-                .frame(width: 18, height: 22)
-            
-            // Cap
-            Path { path in
-                path.move(to: CGPoint(x: 2, y: 10))
-                path.addQuadCurve(to: CGPoint(x: 22, y: 10), control: CGPoint(x: 12, y: 0))
-                path.closeSubpath()
-            }
-            .fill(Color(hex: "8b5a2b"))
-            .frame(width: 24, height: 24)
-        }
     }
 }
 
