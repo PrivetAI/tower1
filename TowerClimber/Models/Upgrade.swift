@@ -7,12 +7,13 @@ struct Upgrade: Identifiable, Codable {
     let name: String
     let description: String
     let basePrice: Int
-    let priceMultiplier: Double
     let effect: UpgradeEffect
     var level: Int = 0
     
+    // Exponential price formula: basePrice * (1.15 ^ level)
     var currentPrice: Int {
-        Int(Double(basePrice) * pow(priceMultiplier, Double(level)))
+        let multiplier = pow(1.15, Double(level))
+        return Int(Double(basePrice) * multiplier)
     }
     
     var effectValue: Double {
@@ -27,7 +28,7 @@ struct Upgrade: Identifiable, Codable {
     }
     
     var isMaxLevel: Bool {
-        level >= 50
+        level >= 100
     }
 }
 
@@ -41,13 +42,12 @@ enum UpgradeEffect: Codable, Equatable {
 
 extension Upgrade {
     static let allUpgrades: [Upgrade] = [
-        // Tap Power Upgrades
+        // Tap Power Upgrades (finger icon theme)
         Upgrade(
             id: "strong_paws",
             name: "Strong Paws",
             description: "+1 floor per tap",
-            basePrice: 10,
-            priceMultiplier: 1.15,
+            basePrice: 15,
             effect: .tapPower(1)
         ),
         Upgrade(
@@ -55,76 +55,81 @@ extension Upgrade {
             name: "Climbing Boots",
             description: "+2 floors per tap",
             basePrice: 100,
-            priceMultiplier: 1.2,
             effect: .tapPower(2)
         ),
         Upgrade(
             id: "turbo_claws",
             name: "Turbo Claws",
             description: "+5 floors per tap",
-            basePrice: 1000,
-            priceMultiplier: 1.25,
+            basePrice: 500,
             effect: .tapPower(5)
         ),
         Upgrade(
-            id: "rocket_tail",
-            name: "Rocket Tail",
+            id: "rocket_boost",
+            name: "Rocket Boost",
             description: "+10 floors per tap",
-            basePrice: 10000,
-            priceMultiplier: 1.3,
+            basePrice: 3000,
             effect: .tapPower(10)
         ),
         
-        // Auto Tap Upgrades
+        // Auto Tap Upgrades (clock/auto theme)
         Upgrade(
             id: "helper_bird",
             name: "Helper Bird",
             description: "+1 floor/sec",
             basePrice: 50,
-            priceMultiplier: 1.15,
             effect: .autoTap(1)
         ),
         Upgrade(
-            id: "friendly_wind",
-            name: "Friendly Wind",
+            id: "wind_gust",
+            name: "Wind Gust",
             description: "+3 floors/sec",
-            basePrice: 500,
-            priceMultiplier: 1.2,
+            basePrice: 300,
             effect: .autoTap(3)
         ),
         Upgrade(
-            id: "elevator",
+            id: "mini_elevator",
             name: "Mini Elevator",
             description: "+10 floors/sec",
-            basePrice: 5000,
-            priceMultiplier: 1.25,
+            basePrice: 2000,
             effect: .autoTap(10)
         ),
-        
-        // Multipliers
         Upgrade(
-            id: "lucky_acorn",
-            name: "Lucky Acorn",
+            id: "jet_engine",
+            name: "Jet Engine",
+            description: "+25 floors/sec",
+            basePrice: 10000,
+            effect: .autoTap(25)
+        ),
+        
+        // Multipliers (star/boost theme)
+        Upgrade(
+            id: "lucky_charm",
+            name: "Lucky Charm",
             description: "+10% to all gains",
             basePrice: 200,
-            priceMultiplier: 1.5,
             effect: .multiplier(0.1)
         ),
         Upgrade(
-            id: "golden_fur",
-            name: "Golden Fur",
+            id: "golden_touch",
+            name: "Golden Touch",
             description: "+25% to all gains",
-            basePrice: 2000,
-            priceMultiplier: 1.6,
+            basePrice: 1500,
             effect: .multiplier(0.25)
         ),
         Upgrade(
             id: "sky_blessing",
             name: "Sky Blessing",
             description: "+50% to all gains",
-            basePrice: 20000,
-            priceMultiplier: 1.7,
+            basePrice: 8000,
             effect: .multiplier(0.5)
+        ),
+        Upgrade(
+            id: "tower_master",
+            name: "Tower Master",
+            description: "+100% to all gains",
+            basePrice: 50000,
+            effect: .multiplier(1.0)
         )
     ]
 }

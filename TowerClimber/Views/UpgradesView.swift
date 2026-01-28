@@ -191,13 +191,19 @@ struct UpgradeCard: View {
 struct TapIcon: View {
     var body: some View {
         ZStack {
-            Circle()
-                .stroke(Color(hex: "e94560"), lineWidth: 2)
-                .frame(width: 24, height: 24)
-            
+            // Paw Pad
             Circle()
                 .fill(Color(hex: "e94560"))
-                .frame(width: 12, height: 12)
+                .frame(width: 16, height: 16)
+                .offset(y: 4)
+            
+            // Toes
+            HStack(spacing: 2) {
+                Circle().fill(Color(hex: "e94560")).frame(width: 8, height: 8)
+                Circle().fill(Color(hex: "e94560")).frame(width: 8, height: 8).offset(y: -4)
+                Circle().fill(Color(hex: "e94560")).frame(width: 8, height: 8)
+            }
+            .offset(y: -8)
         }
     }
 }
@@ -205,15 +211,14 @@ struct TapIcon: View {
 struct AutoIcon: View {
     var body: some View {
         ZStack {
-            Circle()
-                .stroke(AppColors.success, lineWidth: 2)
-                .frame(width: 24, height: 24)
-            
-            // Arrow circle
+            // Bird/Wing shape
             Path { path in
-                path.addArc(center: CGPoint(x: 12, y: 12), radius: 6, startAngle: .degrees(0), endAngle: .degrees(270), clockwise: false)
+                path.move(to: CGPoint(x: 4, y: 14))
+                path.addQuadCurve(to: CGPoint(x: 20, y: 6), control: CGPoint(x: 12, y: 4))
+                path.addQuadCurve(to: CGPoint(x: 12, y: 20), control: CGPoint(x: 24, y: 16))
+                path.closeSubpath()
             }
-            .stroke(AppColors.success, lineWidth: 2)
+            .fill(AppColors.success)
             .frame(width: 24, height: 24)
         }
     }
@@ -221,9 +226,21 @@ struct AutoIcon: View {
 
 struct MultiplierIcon: View {
     var body: some View {
-        Text("x")
-            .font(.system(size: 22, weight: .bold))
-            .foregroundColor(AppColors.gold)
+        ZStack {
+            // Acorn shape
+            Ellipse()
+                .fill(Color(hex: "d4a574"))
+                .frame(width: 18, height: 22)
+            
+            // Cap
+            Path { path in
+                path.move(to: CGPoint(x: 2, y: 10))
+                path.addQuadCurve(to: CGPoint(x: 22, y: 10), control: CGPoint(x: 12, y: 0))
+                path.closeSubpath()
+            }
+            .fill(Color(hex: "8b5a2b"))
+            .frame(width: 24, height: 24)
+        }
     }
 }
 

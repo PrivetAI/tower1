@@ -40,7 +40,6 @@ struct SettingsView: View {
                         
                         // Reset Section
                         SettingsSection(title: "Data") {
-                            Button(action: { showResetAlert = true }) {
                                 HStack {
                                     Text("Reset All Progress")
                                         .font(AppFonts.body(16))
@@ -48,6 +47,7 @@ struct SettingsView: View {
                                     Spacer()
                                 }
                                 .padding(.vertical, 12)
+                                .padding(.horizontal, 16)
                             }
                         }
                         

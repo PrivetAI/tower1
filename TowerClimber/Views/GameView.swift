@@ -6,7 +6,6 @@ struct GameView: View {
     @State private var tapScale: CGFloat = 1.0
     @State private var showPlusFloors = false
     @State private var plusFloorsOffset: CGFloat = 0
-    @State private var squirrelOffset: CGFloat = 0
     
     var body: some View {
         ZStack {
@@ -39,26 +38,20 @@ struct GameView: View {
                 
                 Spacer()
                 
-                // Tower with Squirrel
-                ZStack {
-                    TowerAnimation(floor: gameState.currentFloor)
-                        .frame(height: 280)
-                    
-                    // Squirrel
-                    SquirrelView()
-                        .offset(y: squirrelOffset)
-                }
-                .padding(.horizontal, 40)
+                // Tower - grows infinitely with scroll effect
+                TowerView(floor: gameState.currentFloor)
+                    .frame(height: 260)
+                    .padding(.horizontal, 30)
                 
                 Spacer()
                 
-                // +Floors Floating Text
+                // +Floors Floating Text + TAP Button
                 ZStack {
                     if showPlusFloors {
                         Text("+\(gameState.floorsPerTap)")
                             .font(AppFonts.title(36))
                             .foregroundColor(AppColors.gold)
-                            .offset(y: plusFloorsOffset)
+                            .offset(y: plusFloorsOffset - 80)
                             .opacity(showPlusFloors ? 1 : 0)
                     }
                     
@@ -73,33 +66,31 @@ struct GameView: View {
                                         endPoint: .bottom
                                     )
                                 )
-                                .frame(width: 130, height: 130)
-                                .shadow(color: Color(hex: "e94560").opacity(0.5), radius: 20, x: 0, y: 10)
+                                .frame(width: 120, height: 120)
+                                .shadow(color: Color(hex: "e94560").opacity(0.5), radius: 15, x: 0, y: 8)
                             
                             Circle()
                                 .stroke(Color.white.opacity(0.3), lineWidth: 3)
-                                .frame(width: 130, height: 130)
+                                .frame(width: 120, height: 120)
                             
                             VStack(spacing: 2) {
                                 Text("CLIMB")
-                                    .font(AppFonts.title(24))
+                                    .font(AppFonts.title(22))
                                     .foregroundColor(.white)
                                 Text("+\(gameState.floorsPerTap)")
-                                    .font(AppFonts.body(16))
+                                    .font(AppFonts.body(14))
                                     .foregroundColor(.white.opacity(0.8))
                             }
                         }
                     }
                     .scaleEffect(tapScale)
                 }
-                .frame(height: 160)
+                .frame(height: 140)
                 
+                // Bottom padding for tab bar
                 Spacer()
-                    .frame(height: 20)
+                    .frame(height: 90)
             }
-        }
-        .onAppear {
-            startSquirrelAnimation()
         }
     }
     
@@ -115,14 +106,6 @@ struct GameView: View {
             tapScale = 1.0
         }
         
-        // Squirrel jump
-        withAnimation(.easeOut(duration: 0.15)) {
-            squirrelOffset = -20
-        }
-        withAnimation(.spring(response: 0.3, dampingFraction: 0.6).delay(0.15)) {
-            squirrelOffset = 0
-        }
-        
         // +Floors floating animation
         plusFloorsOffset = 0
         showPlusFloors = true
@@ -131,13 +114,6 @@ struct GameView: View {
         }
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
             showPlusFloors = false
-        }
-    }
-    
-    private func startSquirrelAnimation() {
-        // Subtle idle animation
-        withAnimation(.easeInOut(duration: 1.5).repeatForever(autoreverses: true)) {
-            squirrelOffset = -5
         }
     }
     
@@ -151,6 +127,117 @@ struct GameView: View {
     }
 }
 
+// MARK: - Tower View (infinite growth with floor counter)
+
+struct TowerView: View {
+    let floor: Int
+    
+    @State private var glowOpacity: CGFloat = 0.4
+    
+    // Tower grows logarithmically - always visible growth
+    private var displayHeight: CGFloat {
+        let base: CGFloat = 60
+        let growth = CGFloat(log10(Double(max(floor, 1)) + 1)) * 60
+        return min(base + growth, 240)
+    }
+    
+    var body: some View {
+        VStack(spacing: 0) {
+            // Floor counter at top
+            Text("Floor \(formatNumber(floor))")
+                .font(AppFonts.title(18))
+                .foregroundColor(.white)
+                .padding(.bottom, 8)
+            
+            Spacer()
+            
+            // Tower building
+            ZStack {
+                // Glow
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(Color(hex: "7952b3").opacity(0.2 * glowOpacity))
+                    .frame(width: 90, height: displayHeight + 30)
+                    .blur(radius: 10)
+                
+                VStack(spacing: 0) {
+                    // Roof
+                    Triangle()
+                        .fill(
+                            LinearGradient(
+                                colors: [Color(hex: "e94560"), Color(hex: "c73e54")],
+                                startPoint: .top,
+                                endPoint: .bottom
+                            )
+                        )
+                        .frame(width: 80, height: 30)
+                    
+                    // Tower body
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 6)
+                            .fill(
+                                LinearGradient(
+                                    colors: [Color(hex: "7952b3"), Color(hex: "533483")],
+                                    startPoint: .top,
+                                    endPoint: .bottom
+                                )
+                            )
+                        
+                        // Windows grid
+                        VStack(spacing: 12) {
+                            ForEach(0..<windowRows, id: \.self) { _ in
+                                HStack(spacing: 10) {
+                                    WindowView()
+                                    WindowView()
+                                }
+                            }
+                        }
+                        .padding(.vertical, 10)
+                    }
+                    .frame(width: 70, height: displayHeight)
+                }
+            }
+        }
+        .onAppear {
+            withAnimation(.easeInOut(duration: 2).repeatForever(autoreverses: true)) {
+                glowOpacity = 1.0
+            }
+        }
+    }
+    
+    private var windowRows: Int {
+        max(1, min(Int(displayHeight / 30), 7))
+    }
+    
+    private func formatNumber(_ num: Int) -> String {
+        if num >= 1000000 {
+            return String(format: "%.1fM", Double(num) / 1000000)
+        } else if num >= 1000 {
+            return String(format: "%.1fK", Double(num) / 1000)
+        }
+        return "\(num)"
+    }
+}
+
+// MARK: - Window View
+
+struct WindowView: View {
+    @State private var isLit = Bool.random()
+    
+    var body: some View {
+        RoundedRectangle(cornerRadius: 2)
+            .fill(AppColors.gold.opacity(isLit ? 0.9 : 0.3))
+            .frame(width: 12, height: 14)
+            .onAppear {
+                // Random window lighting
+                Timer.scheduledTimer(withTimeInterval: Double.random(in: 2...5), repeats: true) { _ in
+                    withAnimation(.easeInOut(duration: 0.3)) {
+                        isLit.toggle()
+                    }
+                }
+            }
+    }
+}
+
 // MARK: - Stat Card
 
 struct StatCard: View {
@@ -160,7 +247,6 @@ struct StatCard: View {
     
     var body: some View {
         VStack(spacing: 6) {
-            // Custom icon
             iconView
                 .frame(width: 24, height: 24)
             
@@ -264,6 +350,17 @@ struct Star: Shape {
             }
         }
         
+        path.closeSubpath()
+        return path
+    }
+}
+
+struct Triangle: Shape {
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+        path.move(to: CGPoint(x: rect.midX, y: rect.minY))
+        path.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY))
+        path.addLine(to: CGPoint(x: rect.minX, y: rect.maxY))
         path.closeSubpath()
         return path
     }
