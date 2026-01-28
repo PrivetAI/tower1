@@ -4,41 +4,44 @@ struct MilestonesView: View {
     @EnvironmentObject var gameState: GameState
     
     var body: some View {
-        ZStack {
-            AppColors.background
-                .ignoresSafeArea()
+        GeometryReader { geo in
+            let isIPad = geo.size.width > 500
+            let scale: CGFloat = isIPad ? 1.2 : 1.0
             
-            VStack(spacing: 0) {
-                // Header
-                HStack {
-                    Text("Milestones")
-                        .font(AppFonts.title(28))
-                        .foregroundColor(.white)
-                    
-                    Spacer()
-                    
-                    // Current floor
-                    Text("Floor \(formatNumber(gameState.currentFloor))")
-                        .font(AppFonts.body(14))
-                        .foregroundColor(.white.opacity(0.7))
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 8)
-                        .background(Capsule().fill(AppColors.cardBackground))
-                }
-                .padding(.horizontal, 20)
-                .padding(.top, 16)
+            ZStack {
+                AppColors.background
+                    .ignoresSafeArea()
                 
-                ScrollView {
-                    LazyVStack(spacing: 12) {
-                        ForEach(gameState.milestones) { milestone in
-                            MilestoneCard(milestone: milestone) {
-                                claimMilestone(milestone)
+                VStack(spacing: 0) {
+                    // Header
+                    HStack {
+                        Text("Goals")
+                            .font(AppFonts.title(26 * scale))
+                            .foregroundColor(.white)
+                        
+                        Spacer()
+                        
+                        // Progress
+                        let completed = gameState.milestones.filter { $0.isCompleted }.count
+                        Text("\(completed)/\(gameState.milestones.count)")
+                            .font(AppFonts.body(14 * scale))
+                            .foregroundColor(.white.opacity(0.6))
+                    }
+                    .padding(.horizontal, isIPad ? 40 : 16)
+                    .padding(.top, isIPad ? 20 : 12)
+                    
+                    ScrollView {
+                        LazyVStack(spacing: 10 * scale) {
+                            ForEach(gameState.milestones) { milestone in
+                                MilestoneCard(milestone: milestone, scale: scale) {
+                                    claimMilestone(milestone)
+                                }
                             }
                         }
+                        .padding(.horizontal, isIPad ? 40 : 14)
+                        .padding(.top, 16)
+                        .padding(.bottom, 100)
                     }
-                    .padding(.horizontal, 16)
-                    .padding(.top, 16)
-                    .padding(.bottom, 100)
                 }
             }
         }
@@ -49,44 +52,52 @@ struct MilestonesView: View {
             SoundManager.shared.playSuccess()
         }
     }
-    
-    private func formatNumber(_ num: Int) -> String {
-        if num >= 1000000 {
-            return String(format: "%.1fM", Double(num) / 1000000)
-        } else if num >= 1000 {
-            return String(format: "%.1fK", Double(num) / 1000)
-        }
-        return "\(num)"
-    }
 }
 
 // MARK: - Milestone Card
 
 struct MilestoneCard: View {
     let milestone: Milestone
+    var scale: CGFloat = 1.0
     let onClaim: () -> Void
     
     @EnvironmentObject var gameState: GameState
     
     private var progress: Double {
-        min(1.0, Double(gameState.currentFloor) / Double(milestone.targetFloor))
+        min(Double(gameState.currentFloor) / Double(milestone.targetFloor), 1.0)
     }
     
     var body: some View {
-        HStack(spacing: 12) {
-            // Status Icon
-            statusIcon
-                .frame(width: 44, height: 44)
+        HStack(spacing: 12 * scale) {
+            // Icon
+            ZStack {
+                Circle()
+                    .fill(milestone.isCompleted ? AppColors.gold.opacity(0.2) : Color.gray.opacity(0.2))
+                    .frame(width: 44 * scale, height: 44 * scale)
+                
+                if milestone.isClaimed {
+                    CheckmarkIcon()
+                        .frame(width: 20 * scale, height: 20 * scale)
+                } else if milestone.isCompleted {
+                    Star()
+                        .fill(AppColors.gold)
+                        .frame(width: 22 * scale, height: 22 * scale)
+                } else {
+                    Text("\(Int(progress * 100))%")
+                        .font(AppFonts.body(11 * scale))
+                        .foregroundColor(.white.opacity(0.6))
+                }
+            }
             
             // Info
             VStack(alignment: .leading, spacing: 4) {
                 Text(milestone.name)
-                    .font(AppFonts.body(16))
+                    .font(AppFonts.body(15 * scale))
                     .foregroundColor(.white)
                 
                 Text(milestone.description)
-                    .font(AppFonts.body(12))
-                    .foregroundColor(.white.opacity(0.6))
+                    .font(AppFonts.body(11 * scale))
+                    .foregroundColor(.white.opacity(0.5))
                 
                 // Progress bar
                 if !milestone.isCompleted {
@@ -94,93 +105,58 @@ struct MilestoneCard: View {
                         ZStack(alignment: .leading) {
                             RoundedRectangle(cornerRadius: 3)
                                 .fill(Color.white.opacity(0.1))
-                                .frame(height: 6)
                             
                             RoundedRectangle(cornerRadius: 3)
                                 .fill(AppColors.accent)
-                                .frame(width: geo.size.width * progress, height: 6)
+                                .frame(width: geo.size.width * progress)
                         }
                     }
-                    .frame(height: 6)
+                    .frame(height: 4 * scale)
                 }
             }
             
             Spacer()
             
-            // Reward / Claim Button
+            // Claim Button / Reward
             if milestone.isClaimed {
-                HStack(spacing: 4) {
-                    CheckmarkIcon()
-                        .frame(width: 16, height: 16)
-                    Text("Claimed")
-                        .font(AppFonts.body(12))
+                HStack(spacing: 3) {
+                    CoinIcon()
+                        .frame(width: 12 * scale, height: 12 * scale)
+                    Text("+\(formatNumber(milestone.reward))")
+                        .font(AppFonts.body(12 * scale))
+                        .foregroundColor(AppColors.gold.opacity(0.5))
                 }
-                .foregroundColor(AppColors.success)
             } else if milestone.isCompleted {
                 Button(action: onClaim) {
-                    HStack(spacing: 4) {
+                    HStack(spacing: 3) {
                         CoinIcon()
-                            .frame(width: 14, height: 14)
-                        Text("+\(formatNumber(milestone.reward))")
-                            .font(AppFonts.body(14))
+                            .frame(width: 12 * scale, height: 12 * scale)
+                        Text(formatNumber(milestone.reward))
+                            .font(AppFonts.body(12 * scale))
                     }
                     .foregroundColor(.white)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 8)
+                    .padding(.horizontal, 10 * scale)
+                    .padding(.vertical, 8 * scale)
                     .background(
-                        RoundedRectangle(cornerRadius: 10)
+                        RoundedRectangle(cornerRadius: 8 * scale)
                             .fill(AppColors.success)
                     )
                 }
             } else {
-                HStack(spacing: 4) {
+                HStack(spacing: 3) {
                     CoinIcon()
-                        .frame(width: 14, height: 14)
+                        .frame(width: 12 * scale, height: 12 * scale)
                     Text(formatNumber(milestone.reward))
-                        .font(AppFonts.body(14))
+                        .font(AppFonts.body(12 * scale))
                 }
-                .foregroundColor(.white.opacity(0.5))
+                .foregroundColor(.white.opacity(0.4))
             }
         }
-        .padding(12)
+        .padding(12 * scale)
         .background(
-            RoundedRectangle(cornerRadius: 16)
+            RoundedRectangle(cornerRadius: 14 * scale)
                 .fill(AppColors.cardBackground)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 16)
-                        .stroke(milestone.isCompleted && !milestone.isClaimed ? AppColors.success : Color.clear, lineWidth: 2)
-                )
         )
-    }
-    
-    @ViewBuilder
-    var statusIcon: some View {
-        ZStack {
-            Circle()
-                .fill(statusColor.opacity(0.2))
-            
-            if milestone.isClaimed {
-                CheckmarkIcon()
-                    .foregroundColor(AppColors.success)
-            } else if milestone.isCompleted {
-                GiftIcon()
-                    .foregroundColor(AppColors.success)
-            } else {
-                Text("\(Int(progress * 100))%")
-                    .font(AppFonts.body(11))
-                    .foregroundColor(.white.opacity(0.7))
-            }
-        }
-    }
-    
-    var statusColor: Color {
-        if milestone.isClaimed {
-            return AppColors.success
-        } else if milestone.isCompleted {
-            return AppColors.gold
-        } else {
-            return Color.white.opacity(0.2)
-        }
     }
     
     private func formatNumber(_ num: Int) -> String {
@@ -193,38 +169,16 @@ struct MilestoneCard: View {
     }
 }
 
-// MARK: - Custom Icons
+// MARK: - Checkmark Icon
 
 struct CheckmarkIcon: View {
     var body: some View {
         Path { path in
             path.move(to: CGPoint(x: 4, y: 10))
             path.addLine(to: CGPoint(x: 8, y: 14))
-            path.addLine(to: CGPoint(x: 16, y: 4))
+            path.addLine(to: CGPoint(x: 16, y: 6))
         }
-        .stroke(style: StrokeStyle(lineWidth: 2, lineCap: .round, lineJoin: .round))
-        .frame(width: 20, height: 18)
-    }
-}
-
-struct GiftIcon: View {
-    var body: some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: 3)
-                .fill(AppColors.gold)
-                .frame(width: 18, height: 14)
-                .offset(y: 3)
-            
-            RoundedRectangle(cornerRadius: 2)
-                .fill(Color(hex: "e94560"))
-                .frame(width: 20, height: 6)
-                .offset(y: -4)
-            
-            Rectangle()
-                .fill(Color(hex: "e94560"))
-                .frame(width: 4, height: 14)
-                .offset(y: 3)
-        }
+        .stroke(AppColors.success, style: StrokeStyle(lineWidth: 2, lineCap: .round, lineJoin: .round))
     }
 }
 
