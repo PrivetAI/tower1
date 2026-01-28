@@ -4,7 +4,7 @@ struct SplashView: View {
     @Binding var showSplash: Bool
     @State private var logoScale: CGFloat = 0.5
     @State private var logoOpacity: Double = 0
-    @State private var towerHeight: CGFloat = 0
+    @State private var towerFloor: Int = 0
     @State private var showStartButton = false
     
     var body: some View {
@@ -17,14 +17,50 @@ struct SplashView: View {
                 
                 // Logo
                 VStack(spacing: 8) {
-                    Text("🏰")
-                        .font(.system(size: 80))
+                    // Custom tower icon instead of emoji
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(
+                                LinearGradient(
+                                    colors: [Color(hex: "7952b3"), Color(hex: "533483")],
+                                    startPoint: .top,
+                                    endPoint: .bottom
+                                )
+                            )
+                            .frame(width: 50, height: 70)
+                        
+                        Triangle()
+                            .fill(Color(hex: "e94560"))
+                            .frame(width: 60, height: 25)
+                            .offset(y: -47)
+                        
+                        // Windows
+                        VStack(spacing: 8) {
+                            HStack(spacing: 6) {
+                                RoundedRectangle(cornerRadius: 2)
+                                    .fill(AppColors.gold)
+                                    .frame(width: 10, height: 12)
+                                RoundedRectangle(cornerRadius: 2)
+                                    .fill(AppColors.gold.opacity(0.7))
+                                    .frame(width: 10, height: 12)
+                            }
+                            HStack(spacing: 6) {
+                                RoundedRectangle(cornerRadius: 2)
+                                    .fill(AppColors.gold.opacity(0.7))
+                                    .frame(width: 10, height: 12)
+                                RoundedRectangle(cornerRadius: 2)
+                                    .fill(AppColors.gold)
+                                    .frame(width: 10, height: 12)
+                            }
+                        }
+                    }
+                    .frame(width: 80, height: 100)
                     
                     Text("Tower Climber")
                         .font(AppFonts.title(42))
                         .foregroundColor(.white)
                     
-                    Text("Quick Climb")
+                    Text("Tap to Climb")
                         .font(AppFonts.body(18))
                         .foregroundColor(AppColors.gold)
                 }
@@ -32,7 +68,7 @@ struct SplashView: View {
                 .opacity(logoOpacity)
                 
                 // Animated Tower
-                TowerAnimation(height: towerHeight, maxHeight: 150)
+                TowerAnimation(floor: towerFloor)
                     .frame(height: 150)
                 
                 Spacer()
@@ -75,7 +111,7 @@ struct SplashView: View {
         
         // Tower building animation
         withAnimation(.easeOut(duration: 1.2).delay(0.3)) {
-            towerHeight = 150
+            towerFloor = 50
         }
         
         // Show start button
@@ -84,6 +120,19 @@ struct SplashView: View {
                 showStartButton = true
             }
         }
+    }
+}
+
+// MARK: - Triangle Shape
+
+struct Triangle: Shape {
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+        path.move(to: CGPoint(x: rect.midX, y: rect.minY))
+        path.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY))
+        path.addLine(to: CGPoint(x: rect.minX, y: rect.maxY))
+        path.closeSubpath()
+        return path
     }
 }
 
