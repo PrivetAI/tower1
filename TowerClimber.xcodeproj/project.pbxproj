@@ -21,6 +21,7 @@
 		A1000034207E0034 /* MilestonesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000033207E0033A /* MilestonesView.swift */; };
 		A1000035207E0035 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000034207E0034A /* SettingsView.swift */; };
 		A1000036207E0036 /* MainTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000035207E0035A /* MainTabView.swift */; };
+		A1000038207E0038 /* Shapes.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000037207E0037A /* Shapes.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -39,6 +40,7 @@
 		A1000033207E0033A /* MilestonesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MilestonesView.swift; sourceTree = "<group>"; };
 		A1000034207E0034A /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		A1000035207E0035A /* MainTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainTabView.swift; sourceTree = "<group>"; };
+		A1000037207E0037A /* Shapes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Shapes.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -93,6 +95,7 @@
 			isa = PBXGroup;
 			children = (
 				A100000A207E0009 /* TowerAnimation.swift */,
+				A1000037207E0037A /* Shapes.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -203,6 +206,7 @@
 				A1000034207E0034 /* MilestonesView.swift in Sources */,
 				A1000035207E0035 /* SettingsView.swift in Sources */,
 				A1000036207E0036 /* MainTabView.swift in Sources */,
+				A1000038207E0038 /* Shapes.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
